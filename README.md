@@ -8,14 +8,14 @@ Analysis of differential alternative splicing from RNA-seq data is complicated b
 ## Usage
 
 - Preprocessing:
-  Input: Transcriptome annotation (GTF file) and Genome sequence (FASTA file).
-  Output: The processed transcriptome annotation based on disjoint genomic regions. The output includes two files 'disjoint_exons.txt' and 'txs_exons.txt' under the directory $GENOME/preprocessed/
-  How: Edit preprocessing_main.R to set the used genome. Then run it using R/Rscript
+  - Input: Transcriptome annotation (GTF file) and Genome sequence (FASTA file).
+  - Output: The processed transcriptome annotation based on disjoint genomic regions. The output includes two files 'disjoint_exons.txt' and 'txs_exons.txt' under the directory $GENOME/preprocessed/
+  - How: Edit preprocessing_main.R to set the used genome. Then run it using R/Rscript
   
 - Segmentation:
-  Input: The preprocessed transcriptome (both files obtained from the previous step). And the desired parameter value L
-  Output: The segments library as a FASTA file
-  How: Edit yanagi_main.py to set the used genome and value of L. Then run it using python (numpy package required) 
+  - Input: The preprocessed transcriptome (both files obtained from the previous step). And the desired parameter value L
+  - Output: The segments library as a FASTA file
+  - How: Edit yanagi_main.py to set the used genome and value of L. Then run it using python (numpy package required) 
   
   ## Utilities
   
