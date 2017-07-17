@@ -17,9 +17,9 @@ Analysis of differential alternative splicing from RNA-seq data is complicated b
   - Output: The segments library as a FASTA file
   - How: Edit yanagi_main.py to set the used genome and value of L. Then run it using python (numpy package required) 
   
-  ## Utilities
+## Utilities
   
-  The 'Utilities' directory contains some scripts used in the analysis presented in the paper.
-  Most importantly, file 'segPairQuant.py' is used to quantify the segments pair, for the case of paired-end RNA-Seq reads.
+The 'Utilities' directory contains some scripts used in the analysis presented in the paper.
+Most importantly, file 'segPairQuant.py' is used to quantify the segments pair, for the case of paired-end RNA-Seq reads.
 
-
+![Alt text](/workflow.jpg?raw=true "Yanagi-based Workflow")
