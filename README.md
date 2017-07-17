@@ -21,3 +21,5 @@ Analysis of differential alternative splicing from RNA-seq data is complicated b
   
   The 'Utilities' directory contains some scripts used in the analysis presented in the paper.
   Most importantly, file 'segPairQuant.py' is used to quantify the segments pair, for the case of paired-end RNA-Seq reads.
+
+![Alt text](workflow.pdf?raw=true "Yanagi-based Workflow")
