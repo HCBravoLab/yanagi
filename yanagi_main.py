@@ -1,8 +1,6 @@
 
-import numpy as np
 from collections import defaultdict
 from collections import Counter
-from sets import Set
 
 from ReferenceLoader import *
 from SegGraph import *
@@ -16,7 +14,7 @@ from SegGraph import *
 # A final segment that can be built from aggregating a sequence of consecutive segments
 class Segment:
     seg_key = SG_Key()  # has fields: exs, start
-    end = long(0)
+    end = 0
     seq = ""
 
     txIDs = set()
@@ -24,7 +22,7 @@ class Segment:
 
     def __init__(self):
         self.seg_key = SG_Key()
-        self.end = long(0)
+        self.end = 0
         self.seq = ""
 
         self.txIDs = set()
@@ -58,7 +56,7 @@ class Segment:
             else:
                 from_pos = 0
                 if strand != ex.strand: #Sanity check for segment strand
-                    print "ERROR, Segment covers exons of different strands"
+                    print("ERROR, Segment covers exons of different strands")
             if i == len(exs)-1: # Last Exon
                 to_pos = self.end - ex.start + 1
             else:
@@ -84,13 +82,13 @@ class Segment:
 #kernprof-script.py -l -v SegMaker_main.py
 #@profile
 def createSG(k, inDir, outname):
-    print "Loading preprocessed data...",
+    print("Loading preprocessed data...",)
     start_time = time.time()
     # Load input
     DExons = load_disjointExons(inDir)
     txs2exons = load_Txs2Exs(inDir)
     geneIDs = txs2exons.keys()
-    print "ET: ", time.time() - start_time
+    print("ET: ", time.time() - start_time)
 
     output_file = open(outname, "w")
     # Statistics files
@@ -108,7 +106,7 @@ def createSG(k, inDir, outname):
         start_time = time.time()
         #Init SegmentGraph
         SG = defaultdict(dict)
-        startNodes = Set()
+        startNodes = set()
 
         txs = txs2exons[geneID]
         
@@ -176,14 +174,14 @@ def createSG(k, inDir, outname):
     output_file.close()
     spl_count_file.close()
     num_segs_len_txs_file.close()
-    print "Creating SG ET:", SG_total_time
-    print "Creating Segments ET:", Segs_total_time
+    print("Creating SG ET:", SG_total_time)
+    print("Creating Segments ET:", Segs_total_time)
 
 def generateSegments(startNodes, chrome, geneID, SG, DExons):
     output = ""
     # Statistics
     txs_num_segs = Counter()
-    for key in sorted(startNodes):
+    for key in startNodes:
         current = SG[key.exsKey()][key.pos]
         segment = Segment()
         done = False
@@ -227,7 +225,7 @@ import sys
 exper = "dm3"
 Ls = [108]
 for L in Ls:
-    print "L=" + str(L)
+    print("L=" + str(L))
     inDir = exper+'\preprocessed'
     outfile = exper+'\\'+exper+'_segs_'+str(L)+'.fa'#sys.argv[3]
 
@@ -235,4 +233,4 @@ for L in Ls:
     segsCount = 0
     createSG(L, inDir, outfile)
     elapsed = time.time() - total_start
-    print "Elapsed Time: ", elapsed
+    print("Elapsed Time: ", elapsed)

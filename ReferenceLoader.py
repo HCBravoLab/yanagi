@@ -1,6 +1,4 @@
-import numpy as np
 from collections import defaultdict
-from sets import Set
 
 import os
 from SegGraph import *
@@ -19,9 +17,9 @@ class DExon:
     def __init__(self, chrome, exonID, start, end, strand, seq):
         self.chrome = chrome
         self.exonID = int(exonID)
-        self.start = long(start)
-        self.end = long(end)
-        self.width = long(self.end-self.start+1)
+        self.start = int(start)
+        self.end = int(end)
+        self.width = int(self.end-self.start+1)
         self.strand = strand
         self.seq = seq
 

@@ -1,4 +1,3 @@
-from sets import Set
 
 # A Segment Key that is used to identify a segment in the segments graph (SG)
 class SG_Key:
@@ -38,11 +37,11 @@ class SG_Key:
 class SG_Node:
     key = SG_Key()
     width = 0
-    end = long(0)
+    end = 0
 
     isStart = False
-    color = Set()
-    my_next = Set()
+    color = set()
+    my_next = set()
 
     ntype = "E"
 
@@ -50,8 +49,8 @@ class SG_Node:
         self.key = key
         self.width = width
         self.end = end
-        self.my_next = Set()
-        self.color = Set()
+        self.my_next = set()
+        self.color = set()
         self.ntype = "E"
 
     def addTxID(self, tx):
