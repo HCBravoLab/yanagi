@@ -15,7 +15,7 @@ Analysis of differential alternative splicing from RNA-seq data is complicated b
 - Segmentation:
   - Input: The preprocessed transcriptome (both files obtained from the previous step) and the desired parameter value L
   - Output: The segments library as a FASTA file
-  - How: Edit yanagi_main.py to set the used genome and value of L. Then run it using python (numpy package required) 
+  - How: Edit yanagi_main.py to set the used genome and value of L. Then run it using python 
   
 ## Utilities
   
