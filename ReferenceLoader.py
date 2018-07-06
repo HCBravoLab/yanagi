@@ -120,8 +120,11 @@ class TX:
 
 def load_Txs2Exs(inDir):
     genes = defaultdict(list)
+    geneIDSorted = set()
     with open(os.path.join(inDir, 'txs_exons.txt')) as file_hndl:
         for i, line in enumerate(file_hndl):
             key_id, chrome, geneID, txID, exons, strand = line.strip().split(' ')
             genes[geneID].append(TX(key_id, chrome, txID, exons))
-    return(genes)
+            geneIDSorted.add(chrome+":"+geneID)
+    geneIDSorted = [genechr.split(":")[1] for genechr in sorted(geneIDSorted)]
+    return(genes, geneIDSorted)

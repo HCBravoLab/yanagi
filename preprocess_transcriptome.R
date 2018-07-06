@@ -30,6 +30,14 @@ preprocess_transcriptome <- function(txdb, genome, outDir, do_tx = FALSE) {
   
   write.table(exs_table, file=exs_filename, quote = FALSE, col.names = FALSE)
   
+  # Report Exons-to-Disjoint Exons
+  #################################
+  exhits = as.data.frame(findOverlaps(exons, DEx))
+  exs2DEXs_table = data.frame(exon = hits$subjectHits, 
+                              DEX = hits$queryHits, end = end(DEx), strand=strand(DEx), 
+                         seq = getSeq(genome, DEx))
+  
+  
   # Mapping Transcripts to Disjoint Exons
   ########################################
   if(length(txs2exons) != 0) {

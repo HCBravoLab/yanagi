@@ -63,6 +63,6 @@ class SG_Node:
         return self.key.__str__()
     
     def __repr__(self):
-        return "%s --> width: %d, end:%d, ntype: %s, flags: %d, color: (%s), next: %s" % \
-              (self.keyStr(), self.width, self.end, self.ntype, self.flags, ','.join(self.color), \
+        return "%s --> width: %d, end:%d, ntype: %s, isStart: %s, color: (%s), next: %s" % \
+              (self.keyStr(), self.width, self.end, self.ntype, self.isStart, ','.join(self.color), \
                self.my_next)
