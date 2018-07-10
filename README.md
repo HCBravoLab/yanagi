@@ -1,4 +1,5 @@
 # Yanagi: Transcript Segment Library Construction for RNA-Seq Quantification
+## Update July 10th, 2018: Check our recent manuscript for detailed formulation of segments and their usage in gene and alternative analysis https://www.biorxiv.org/content/early/2018/07/08/364281
 ## Source code based on the work presented in paper to appear in proceedings of WABI 2017
 
 ## Abstract
