@@ -63,6 +63,6 @@ seqlevels(txdb) <- seqs
 startTime = proc.time()
 
 source("preprocess_transcriptome.R")
-preprocess_transcriptome(txdb, genome, outDir, FALSE)
+preprocess_transcriptome(txdb, genome, outDir, do_tx = FALSE)
 
 print(proc.time() - startTime)

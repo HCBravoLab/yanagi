@@ -67,16 +67,22 @@ preprocess_transcriptome <- function(txdb, genome, outDir, do_tx = FALSE) {
   # Report Transcriptome
   #######################
   if(do_tx) {
-    # Clear file
-    close(file(txtome_filename, open="w"))
-    
     print("Writing Transcriptome ...")
     tx_seqs = as.vector(extractTranscriptSeqs(genome, txs2exons))
-    lines = paste(">", txIDs_geneIDs$TXCHROM, ":", txIDs_geneIDs$GENEID, ":", names(tx_seqs), "\n", 
-                tx_seqs, sep="")
-    
-    f = file(txtome_filename, "w")
-    writeLines(lines, f)
-    close(f)
+    txome_table = data.frame(tx = paste0(">", txIDs_geneIDs$TXNAME, 
+                                         " ", txIDs_geneIDs$TXCHROM, ":", txIDs_geneIDs$GENEID, ":", names(tx_seqs), ":", txIDs_geneIDs$TXSTRAND,
+                                         "\n", tx_seqs))
+    write.table(txome_table, file=txtome_filename, quote = FALSE, col.names = FALSE, row.names = FALSE)
+    # # Clear file
+    # close(file(txtome_filename, open="w"))
+    # 
+    # print("Writing Transcriptome ...")
+    # tx_seqs = as.vector(extractTranscriptSeqs(genome, txs2exons))
+    # lines = paste(">", txIDs_geneIDs$TXCHROM, ":", txIDs_geneIDs$GENEID, ":", names(tx_seqs), "\n", 
+    #             tx_seqs, sep="")
+    # 
+    # f = file(txtome_filename, "w")
+    # writeLines(lines, f)
+    # close(f)
   }
 }
