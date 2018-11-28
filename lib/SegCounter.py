@@ -2,21 +2,14 @@ from collections import defaultdict
 from collections import Counter
 
 import itertools
-
-from Bio import SeqIO
-
 import subprocess
+import threading
 
 import os, sys, time
 import glob
 
-import threading
-
 from lib.Segments import *
 from lib.utils import *
-
-#import psutil
-#process = psutil.Process(os.getpid())
 
 class alignThread (threading.Thread):
    def __init__(self, threadID, cmd):
@@ -25,7 +18,7 @@ class alignThread (threading.Thread):
       self.cmd = cmd
       self.aligns = defaultdict(list)
    def run(self):
-      print "Starting " + self.threadID
+      print("Starting " + self.threadID)
       self.aligns = runAlignment(self.cmd)
 
 def writeSegPairCounts(outputCountsFilename, segPairs_counts, newsegPairs_counts, segPairs_txs, segsDict):
