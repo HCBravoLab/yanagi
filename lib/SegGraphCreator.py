@@ -5,6 +5,7 @@ from collections import Counter
 from lib.SegGraph import *
 from lib.ReferenceLoader import *
 from lib.GTFGenerator import *
+from lib.Seg2EventMapper import generateEventsSegsIOE
 
 from tqdm import tqdm
 import time, os
@@ -184,7 +185,7 @@ def parseSegGraph(SG, startNodes, redundantNodes,
 # Main Logic
 #kernprof-script.py -l -v SegGraphCreator.py
 #@profile
-def createSegments(L, inDir, outname, shreded=False):
+def createSegments(L, inDir, outname, eventsFiles=None, shreded=False):
     print("Loading preprocessed data...",)
     start_time = time.time()
     # Load input
@@ -293,6 +294,14 @@ def createSegments(L, inDir, outname, shreded=False):
     print("Creating Segments ET:", Segs_total_time)
     print("Processed", len(geneIDSorted), "Genes,", numTxs, "Transcripts,", SegContig.SEGS_COUNT, "Segments")
     print("Total of", num_shortTxs, "Transcripts shorter than", L)
+    if eventsFiles:
+        print("Mapping Segments to Alternative Splicing Events")
+        for eventsFile in eventsFiles:
+            print("Processing File", eventsFile)
+            generateEventsSegsIOE(fulloutname, DExons, eventsFile,
+                                  fulloutname[:-3]+"_"+os.path.basename(eventsFile))
+            print("Done")
+        
 
 if __name__ == '__main__':
     createSegments(101, "C:/yanagi_new/output/", "hg37_segs101.fa")

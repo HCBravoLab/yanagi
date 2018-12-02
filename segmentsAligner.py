@@ -8,7 +8,7 @@ from lib.SegCounter import alignAndCount
 
 description = \
     "Description:\n\n" + \
-    "The align subcommand pseudo-aligns reads (single or paired-end) into the segments and obtain " + \
+    "This subcommand pseudo-aligns reads (single or paired-end) into the segments and obtain " + \
     "segment (single or segment-pair) counts."
 parser = ArgumentParser(description=description, formatter_class=RawTextHelpFormatter,
                         add_help=False)
