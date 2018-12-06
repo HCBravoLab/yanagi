@@ -2,7 +2,7 @@
 from collections import defaultdict
 
 from lib.ReferenceLoader import DExon
-from lib.Segments import Seg
+from lib.utils import *
 
 def writeExonicBinsToGTF(fout, fname, DExons, txs2exons, geneIDs):
     exs2txs = defaultdict(list)
@@ -14,7 +14,7 @@ def writeExonicBinsToGTF(fout, fname, DExons, txs2exons, geneIDs):
 
     for exID in sorted(DExons):
         ex = DExons[exID]
-        line = '\t'.join([ex.chrome, fname, "exonic_bins",
+        line = '\t'.join([ex.chrome, fname, "exonic_bin",
                           str(ex.start), str(ex.end),
                           ".", ex.strand, ".",
                           "gene_id \""+'+'.join(sorted(exs2genes[exID]))+"\"; "+
@@ -26,13 +26,15 @@ def writeExonicBinsToGTF(fout, fname, DExons, txs2exons, geneIDs):
 
 def writeSegmentsToGTF(fout, fname, segsHeaders):
     for header in segsHeaders:
-        seg = Seg(header)
-        line = '\t'.join([seg.chrm, fname, "segment",
-                          str(min(seg.startLoc, seg.endLoc)),
-                          str(max(seg.startLoc, seg.endLoc)),
-                          ".", seg.strand, ".",
-                          "gene_id \""+seg.geneID+"\"; "+
-                          "entry_id \""+seg.ID+"\"; "+
-                          "exonic_bin_ids \""+'+'.join([str(ex) for ex in sorted(seg.exs)])+"\"; "+
-                          "transcripts \""+'+'.join(sorted(seg.txs))+"\";"])+"\n"
+        if len(header)==0:
+            continue
+        segID, chrome, geneID, txs, exs, seg_start, seg_end, strand = header.split("\t")
+        line = '\t'.join([chrome, fname, "segment",
+                          str(min(int(seg_start), int(seg_end))),
+                          str(max(int(seg_start), int(seg_end))),
+                          ".", strand, ".",
+                          "gene_id \""+geneID+"\"; "+
+                          "entry_id \""+segID+"\"; "+
+                          "exonic_bin_ids \""+exs.replace(",", "+")+"\"; "+
+                          "transcripts \""+txs.replace(",", "+")+"\";"])+"\n"
         fout.write(line)

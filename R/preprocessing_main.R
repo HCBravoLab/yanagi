@@ -1,8 +1,7 @@
-
+.libPaths("C:/Users/umiacs/Documents/R/win-library/3.5")
 
 # source("https://bioconductor.org/biocLite.R")
 
-library(Biostrings)
 library(GenomicFeatures)
 library(Rsamtools)
 
@@ -23,9 +22,9 @@ preprocess_transcriptome <- function(txdb, genome, outDir, do_tx = FALSE) {
   ##################################
   dir.create(outDir, showWarnings = FALSE, recursive = TRUE)
   txtome_filename = file.path(outDir, "transcriptome.fa")
-  exs_filename = file.path(outDir, "disjoint_exons.txt")
-  exs2bins_filename = file.path(outDir, "exons2bins.txt")
-  txs2exs_filename = file.path(outDir, "txs_exons.txt")
+  exs_filename = file.path(outDir, "disjoint_bins.tsv")
+  exs2bins_filename = file.path(outDir, "exons2bins.tsv")
+  txs2exs_filename = file.path(outDir, "txs2bins.tsv")
   
   # Read TXDB data
   #################
@@ -47,15 +46,15 @@ preprocess_transcriptome <- function(txdb, genome, outDir, do_tx = FALSE) {
                          start = start(DEx), end = end(DEx), strand=strand(DEx), 
                          seq = getSeq(genome, DEx))
   
-  write.table(exs_table, file=exs_filename, quote = FALSE, col.names = FALSE)
+  write.table(exs_table, file=exs_filename, quote = FALSE, col.names = NA, sep="\t")
   
   # Report Exons-to-Disjoint Exons
   #################################
   exhits = as.data.frame(findOverlaps(exons, DEx))
-  exs2DEXs_table = data.frame(DEX = exhits$subjectHits, 
+  exs2DEXs_table = data.frame(bin = exhits$subjectHits, 
                               exon = exhits$queryHits, exonInfo = as.character(exons[exhits$queryHits]))
   
-  write.table(exs2DEXs_table, file=exs2bins_filename, quote = FALSE, col.names = T)
+  write.table(exs2DEXs_table, file=exs2bins_filename, quote = FALSE, col.names = NA, sep="\t")
   
   
   # Mapping Transcripts to Disjoint Exons
@@ -83,8 +82,8 @@ preprocess_transcriptome <- function(txdb, genome, outDir, do_tx = FALSE) {
     # Report Genes X Transcripts X DisjointExons
     txs2DExs_vec = as.vector(txs2DExs[match(txIDs_geneIDs$TXID, names(txs2DExs))])
     txs_table = data.frame(chr = txIDs_geneIDs$TXCHROM, geneID = txIDs_geneIDs$GENEID, 
-                           txID = txIDs_geneIDs$TXNAME, exs = txs2DExs_vec, strand = txIDs_geneIDs$TXSTRAND)
-    write.table(txs_table, file=txs2exs_filename, quote = FALSE, col.names = FALSE)
+                           txID = txIDs_geneIDs$TXNAME, strand = txIDs_geneIDs$TXSTRAND, bins = txs2DExs_vec)
+    write.table(txs_table, file=txs2exs_filename, quote = FALSE, col.names = NA, sep="\t")
   }
   
   # Report Transcriptome

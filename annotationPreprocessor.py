@@ -7,7 +7,7 @@ from subprocess import check_call
 
 description = \
     "Description:\n\n" + \
-    "This subcommand preprocesses the transcriptome by breaking exons into " + \
+    "The prep subcommand preprocesses the transcriptome by breaking exons into " + \
     "disjoint exonic bins and find their transcripts mapping"
 parser = ArgumentParser(description=description, formatter_class=RawTextHelpFormatter,
                         add_help=False)

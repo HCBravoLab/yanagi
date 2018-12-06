@@ -4,8 +4,6 @@ import annotationPreprocessor as preprocessAnn
 import segmentsGenerator as generateSegments
 import segmentsAligner as alignSegments
 
-import AS2SegsMapper as mapAS2Segs
-
 import logging
 import argparse 
 import sys
@@ -22,26 +20,20 @@ subparsers = parser.add_subparsers()
 # AnnotationPreprocessor Parser
 preprocessAnnSubparser = subparsers.add_parser(
     "preprocess", parents=[preprocessAnn.parser],
-    help="Preprocesses the transcriptome by breaking exons into disjoint exonic bins and find their transcripts mapping")
+    help="Preprocesses transcriptome annotation by breaking exons into disjoint exonic bins and find their transcript mapping.")
 preprocessAnnSubparser.set_defaults(which="preprocess")
 
 # SegmentsGenerator Parser
 segmentsGeneratorSubparser = subparsers.add_parser(
     "segment", parents=[generateSegments.parser],
-    help="Breaks the preprocessed transcriptome into a set of maximal L-disjoint segments (prepares the segments library).")
+    help="Generates a set of maximal L-disjoint segments from the preprocessed transcriptome annotation.")
 segmentsGeneratorSubparser.set_defaults(which="segment")
 
 # SegmentsAligner Parser
 segmentsAlignerSubparser = subparsers.add_parser(
     "align", parents=[alignSegments.parser],
-    help="Pseudo aligns reads (single or paired-end) into the segments and obtain segment (single or segment-pair) counts.")
+    help="Pseudo aligns reads (single or paired-end) into the segments and obtain segment counts (single segment or segment pair counts).")
 segmentsAlignerSubparser.set_defaults(which="align")
-
-# ASMapper Parser
-ASMapperSubparser = subparsers.add_parser(
-    "mapEvents", parents=[mapAS2Segs.parser],
-    help="Maps alternative splicing events to their respective inclusion/exclusion segments")
-ASMapperSubparser.set_defaults(which="mapEvents")
 
 # Setting logging preferences
 logger = logging.getLogger(__name__)
@@ -58,9 +50,6 @@ def main():
         elif args.which == "align":
             alignSegments.parser = parser  # Setting the module aparser
             alignSegments.main()
-        elif args.which == "mapEvents":
-            mapAS2Segs.parser = parser  # Setting the module aparser
-            mapAS2Segs.main()
             
     except Exception:
         logger.error("Unknown error: {}".format(sys.exc_info()))

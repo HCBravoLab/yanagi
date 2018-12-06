@@ -28,9 +28,11 @@ class DExon:
 
 def load_disjointExons(inDir):
     exons = dict()
-    with open(os.path.join(inDir, 'disjoint_exons.txt')) as file_hndl:
-        for line in file_hndl:
-            exonID, chrome, start, end, strand, seq = line.strip().split(' ')
+    with open(os.path.join(inDir, 'disjoint_bins.tsv')) as file_hndl:
+        for i, line in enumerate(file_hndl):
+            if i == 0:   #Skip header
+                continue
+            exonID, chrome, start, end, strand, seq = line.strip().split('\t')
             exon = DExon(chrome, exonID, start, end, strand, seq)
             exons[exon.exonID] = exon
     return exons
@@ -56,9 +58,11 @@ def load_Txs2Exs(inDir):
     numTxs = 0
     genes = defaultdict(list)
     geneIDSorted = set()
-    with open(os.path.join(inDir, 'txs_exons.txt')) as file_hndl:
+    with open(os.path.join(inDir, 'txs2bins.tsv')) as file_hndl:
         for i, line in enumerate(file_hndl):
-            key_id, chrome, geneID, txID, exons, strand = line.strip().split(' ')
+            if i == 0:   #Skip header
+                continue
+            key_id, chrome, geneID, txID, strand, exons = line.strip().split('\t')
             genes[geneID].append(TX(key_id, chrome, txID, exons))
             geneIDSorted.add(chrome+":"+geneID)
             numTxs += 1

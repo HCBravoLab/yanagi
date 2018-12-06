@@ -145,7 +145,7 @@ class SegContig:
         segID = "SEG%07d" % (SegContig.SEGS_COUNT)
         identifier = ">%s %s:%s:%d:(%s):%d:%s TXs:%s segtype:%s" % (segID, chrome, geneID,
                                                     seg_start, exs, self.end, strand, txs, self.segtype)
-        #identifier = ">%s" % (segID)
+        identifier = ">%s" % (segID)
         meta = '\t'.join([segID, chrome, geneID, txs, exs, str(seg_start), str(self.end), strand])+'\n'
         return segID, meta, identifier + '\n' + self.seq + '\n'
 
@@ -186,14 +186,14 @@ def parseSegGraph(SG, startNodes, redundantNodes,
 #kernprof-script.py -l -v SegGraphCreator.py
 #@profile
 def createSegments(L, inDir, outname, eventsFiles=None, shreded=False):
-    print("Loading preprocessed data...",)
+    print("Loading preprocessed Annotation...",)
     start_time = time.time()
     # Load input
     DExons = load_disjointExons(inDir)
     txs2exons, geneIDSorted, numTxs = load_Txs2Exs(inDir)
     print("ET: ", time.time() - start_time)
 
-    fulloutname = os.path.join(inDir, outname)
+    fulloutname = os.path.join(inDir, outname+".fa")
     output_file = open(fulloutname, "w")
     outf_meta = open(fulloutname+".meta", "w")
     outf_meta.write('\t'.join(["segID", "chrom", "geneID", "txAnnIDs",
@@ -285,7 +285,7 @@ def createSegments(L, inDir, outname, eventsFiles=None, shreded=False):
                                                        chrome, geneID, DExons)
         output_file.write(output)
         outf_meta.write(out_meta)
-        writeSegmentsToGTF(output_gtf, outname, output.split("\n")[:-1:2])
+        writeSegmentsToGTF(output_gtf, outname, out_meta.split("\n"))
         
         Segs_total_time += time.time() - start_time
     output_file.close()
