@@ -23,27 +23,23 @@ class alignThread (threading.Thread):
 
 def writeSegPairCounts(outputCountsFilename, segPairs_counts, newsegPairs_counts, segPairs_txs, segsDict):
     with open(outputCountsFilename, "w") as f:
-        f.write("SEG1ID\tSEG2ID\tcount\tSEGTYPES\tGENE\tSEG1LEN\tSEG2LEN\tSEG1SLoc\tSEG2SLoc\tTXS\n")
+        f.write("seg1ID\tseg2ID\tcount\tgeneID\tseg1Len\tseg2Len\tseg1StLoc\tseg2StLoc\ttxs\n")
         
         for segPair in sorted(segPairs_counts.iterkeys()):
             count = segPairs_counts[segPair]
             segs = [segsDict[segID] for segID in segPair.split("_")]
-            types = segs[0].segtype
-            types += segs[1].segtype if segs[0].ID != segs[1].ID else ""
-            line = "\t".join([segs[0].ID, segs[1].ID, str(count), types,
+            line = "\t".join([segs[0].ID, segs[1].ID, str(count), 
                               segs[0].geneID,
                               str(segs[0].length), str(segs[1].length),
                               str(segs[0].startLoc), str(segs[1].startLoc), ','.join(segPairs_txs[segPair])])
             f.write(line + "\n")
     with open(outputCountsFilename+".newJuncs", "w") as f:
-        f.write("SEG1ID\tSEG2ID\tcount\tSEGTYPES\tSEG1GENE\tSEG2GENE\tSEG1LEN\tSEG2LEN\tSEG1SLoc\tSEG2SLoc\n")
+        f.write("seg1ID\tseg2ID\tcount\tgeneID\tseg1Len\tseg2Len\tseg1StLoc\tseg2StLoc\n")
         
         for segPair in sorted(newsegPairs_counts.iterkeys()):
             count = newsegPairs_counts[segPair]
             segs = [segsDict[segID] for segID in segPair.split("_")]
-            types = segs[0].segtype
-            types += segs[1].segtype if segs[0].ID != segs[1].ID else ""
-            line = "\t".join([segs[0].ID, segs[1].ID, str(count), types,
+            line = "\t".join([segs[0].ID, segs[1].ID, str(count), 
                               segs[0].geneID, segs[1].geneID,
                               str(segs[0].length), str(segs[1].length),
                               str(segs[0].startLoc), str(segs[1].startLoc)])
@@ -51,13 +47,12 @@ def writeSegPairCounts(outputCountsFilename, segPairs_counts, newsegPairs_counts
 
 def writeSegCounts(outputCountsFilename, seg_counts, segsDict):
     with open(outputCountsFilename, "w") as f:
-        f.write("SEGID\tcount\tSEGTYPE\tGENE\tSEGLEN\tSEGSLoc\tTXS\n")
-        
-        for segID in sorted(seg_counts.iterkeys()):
+        f.write("segID\tcount\tgeneID\tsegLen\tsegStLoc\n")
+        for segID in sorted(seg_counts):
             seg = segsDict[segID]
             count = seg_counts[segID]
-            line = "\t".join([seg.ID, str(count), seg.segtype, seg.geneID,
-                              str(seg.length), str(seg.startLoc), set2str(seg.txs)])
+            line = "\t".join([seg.ID, str(count), seg.geneID,
+                              str(seg.length), str(seg.startLoc)])
             f.write(line + "\n")
     
 
@@ -195,18 +190,19 @@ def alignAndCount(segmentReferenceFilename, outf, cmd1, cmd2=None):
         segPairs_counts, newsegPairs_counts, segPairs_txs = processPairAligns(thread1.aligns, thread2.aligns, segsDict)
     else:       # Single-end
         seg_counts = processSingleAligns(thread1.aligns)
-        
+
     print("Done!")
     elapsed = time.time() - start_t
     print("Elapsed Time: ", elapsed)
     #print(process.memory_info().rss)
 
     print("Writing Segments Counts...")
+    #print(seg_counts)
     start_t = time.time()
     if cmd2:
-        writeSegPairCounts(outputCountsFilename, segPairs_counts, newsegPairs_counts, segPairs_txs, segsDict)
+        writeSegPairCounts(outf, segPairs_counts, newsegPairs_counts, segPairs_txs, segsDict)
     else:
-        writeSegCounts(outputCountsFilename, seg_counts, segsDict)
+        writeSegCounts(outf, seg_counts, segsDict)
 
     elapsed = time.time() - start_t
     print("Elapsed Time: ", elapsed)

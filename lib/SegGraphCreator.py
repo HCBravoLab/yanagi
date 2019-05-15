@@ -5,7 +5,7 @@ from collections import Counter
 from lib.SegGraph import *
 from lib.ReferenceLoader import *
 from lib.GTFGenerator import *
-from lib.Seg2EventMapper import generateEventsSegsIOE
+from lib.Seg2EventMapperV2 import generateEventsSegsIOE
 
 from tqdm import tqdm
 import time, os
@@ -146,7 +146,7 @@ class SegContig:
         identifier = ">%s %s:%s:%d:(%s):%d:%s TXs:%s segtype:%s" % (segID, chrome, geneID,
                                                     seg_start, exs, self.end, strand, txs, self.segtype)
         identifier = ">%s" % (segID)
-        meta = '\t'.join([segID, chrome, geneID, txs, exs, str(seg_start), str(self.end), strand])+'\n'
+        meta = '\t'.join([segID, chrome, geneID, txs, exs, str(seg_start), str(self.end), strand, str(len(self.seq))])+'\n'
         return segID, meta, identifier + '\n' + self.seq + '\n'
 
 def parseSegGraph(SG, startNodes, redundantNodes,
@@ -185,7 +185,7 @@ def parseSegGraph(SG, startNodes, redundantNodes,
 # Main Logic
 #kernprof-script.py -l -v SegGraphCreator.py
 #@profile
-def createSegments(L, inDir, outname, eventsFiles=None, shreded=False):
+def createSegments(L, inDir, outname, eventsFiles=None, shreded=False, mode='flex'):
     print("Loading preprocessed Annotation...",)
     start_time = time.time()
     # Load input
@@ -193,13 +193,18 @@ def createSegments(L, inDir, outname, eventsFiles=None, shreded=False):
     txs2exons, geneIDSorted, numTxs = load_Txs2Exs(inDir)
     print("ET: ", time.time() - start_time)
 
+    #print("Creating SG ET:", SG_total_time)
+    #print("Creating Segments ET:", Segs_total_time)
+    #print("Processed", len(geneIDSorted), "Genes,", numTxs, "Transcripts,", SegContig.SEGS_COUNT, "Segments")
+    #print("Total of", num_shortTxs, "Transcripts shorter than", L)
+
     fulloutname = os.path.join(inDir, outname+".fa")
     output_file = open(fulloutname, "w")
     outf_meta = open(fulloutname+".meta", "w")
     outf_meta.write('\t'.join(["segID", "chrom", "geneID", "txAnnIDs",
-                               "binIDs", "st", "end", "strand"])+'\n')  #Meta header
+                               "binIDs", "st", "end", "strand", "length"])+'\n')  #Meta header    
     
-    output_gtf = open(fulloutname+".gtf", "w")
+    output_gtf = open(fulloutname[:-3]+".gtf", "w")
     writeExonicBinsToGTF(output_gtf, outname, DExons, txs2exons, geneIDSorted)
     
     chr_start_time = time.time()
@@ -298,8 +303,8 @@ def createSegments(L, inDir, outname, eventsFiles=None, shreded=False):
         print("Mapping Segments to Alternative Splicing Events")
         for eventsFile in eventsFiles:
             print("Processing File", eventsFile)
-            generateEventsSegsIOE(fulloutname, DExons, eventsFile,
-                                  fulloutname[:-3]+"_"+os.path.basename(eventsFile))
+            generateEventsSegsIOE(outf_meta.name, DExons, eventsFile,
+                                  fulloutname[:-3]+"_"+os.path.basename(eventsFile), mode)
             print("Done")
         
 

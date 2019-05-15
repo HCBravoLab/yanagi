@@ -9,13 +9,12 @@ def loadSegmentsIndex(segFile, DExons):
     segLens = {}
     with open(segFile) as sFile:
         for lc, line in enumerate(sFile):
-            if lc % 2 != 0: #read headers only
-                segLens[segID] = len(line.strip())
+            if lc == 0: #skip header
                 continue
-            segID, header, txs, stype = line[1:].strip().split()
-            segTxs[segID] = str2Set(txs.split(':')[1])
-            seqname, geneID, start, exs, end, strand = header.split(':')
-            exons = [DExons[int(ex)] for ex in exs[1:-1].split(',')]
+            segID, chrm, geneID, txAnIDs, binIDs, start, end, strand, length = line.strip().split()
+            segTxs[segID] = str2Set(txAnIDs)
+            segLens[segID] = int(length)
+            exons = [DExons[int(ex)] for ex in binIDs.split(',')]
             for i, exon in enumerate(exons):
                 # Add seg to exon_st loc
                 if i == 0:
@@ -152,10 +151,10 @@ def getSegsForIOEFile(ioeF, outF, segRanges, segTxs, segLens):
                                    set2Str(incTxs), set2Str(exTxs),
                                    str(getCumSegLens(strictIncSegs, segLens)),
                                    str(getCumSegLens(strictExSegs, segLens)),
-                                   str(incLen)]) + "\n")    
+                                   str(incLen)]) + "\n")
+        print(i)
 
 
 def generateEventsSegsIOE(segFile, DExons, eventsFile, outFname):
-
     segRanges, segTxs, segLens = loadSegmentsIndex(segFile, DExons)
     getSegsForIOEFile(eventsFile, outFname, segRanges, segTxs, segLens)

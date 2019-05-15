@@ -3,6 +3,7 @@
 import annotationPreprocessor as preprocessAnn
 import segmentsGenerator as generateSegments
 import segmentsAligner as alignSegments
+import psiCalculator as calculatePSI
 
 import logging
 import argparse 
@@ -35,6 +36,12 @@ segmentsAlignerSubparser = subparsers.add_parser(
     help="Pseudo aligns reads (single or paired-end) into the segments and obtain segment counts (single segment or segment pair counts).")
 segmentsAlignerSubparser.set_defaults(which="align")
 
+# PSICalculator Parser
+psiCalculatorSubparser = subparsers.add_parser(
+    "psiCalc", parents=[calculatePSI.parser],
+    help="Calculates PSI values for a set of splicing events in samples from its underlying segment counts.")
+psiCalculatorSubparser.set_defaults(which="psiCalc")
+
 # Setting logging preferences
 logger = logging.getLogger(__name__)
 
@@ -50,6 +57,9 @@ def main():
         elif args.which == "align":
             alignSegments.parser = parser  # Setting the module aparser
             alignSegments.main()
+        elif args.which == "psiCalc":
+            calculatePSI.parser = parser  # Setting the module aparser
+            calculatePSI.main()
             
     except Exception:
         logger.error("Unknown error: {}".format(sys.exc_info()))

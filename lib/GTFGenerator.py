@@ -28,7 +28,7 @@ def writeSegmentsToGTF(fout, fname, segsHeaders):
     for header in segsHeaders:
         if len(header)==0:
             continue
-        segID, chrome, geneID, txs, exs, seg_start, seg_end, strand = header.split("\t")
+        segID, chrome, geneID, txs, exs, seg_start, seg_end, strand, length = header.split("\t")
         line = '\t'.join([chrome, fname, "segment",
                           str(min(int(seg_start), int(seg_end))),
                           str(max(int(seg_start), int(seg_end))),

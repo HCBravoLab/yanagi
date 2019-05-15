@@ -1,12 +1,35 @@
-.libPaths("C:/Users/umiacs/Documents/R/win-library/3.5")
+#.libPaths("C:/Users/mgunady/Documents/R/win-library/3.5")
 
-# source("https://bioconductor.org/biocLite.R")
+prepareImports <- function() {
+	install.packages("BiocManager", repos='http://cran.us.r-project.org')
+	library(BiocManager)
+
+	list.of.packages <- c("GenomicFeatures", "Rsamtools", "RCurl")
+	new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+
+	if(length(new.packages)) BiocManager::install(new.packages)
+}
+
+#suppressPackageStartupMessages(prepareImports())
+
+
+####################
+## Load Libraries
+####################
 
 library(GenomicFeatures)
 library(Rsamtools)
 
+#source("https://bioconductor.org/biocLite.R")
+#biocLite(c("GenomeInfoDb", "GenomicFeatures", "Rsamtools"))
+
 # Read arguments
 args = commandArgs(trailingOnly = TRUE)
+
+# Uncomment the next line and use the right paramters when running from R directly
+###################################################################################
+#args = c("../test_dm3/Drosophila_melanogaster.BDGP5.70.gtf", "../test_dm3/Drosophila_melanogaster.BDGP5.70.dna.toplevel.fa", "../test_dm3/")
+
 
 print("Load GTF File")
 txdb = makeTxDbFromGFF(args[1])	# GTF File
@@ -106,10 +129,10 @@ preprocess_transcriptome <- function(txdb, genome, outDir, do_tx = FALSE) {
 ####################################################
 ####################################################
 
-seqs = seqlevels(genome)[seqlevels(genome) %in% seqlevels(txdb)]
-seqs = seqs[1:25] #No Alt
+#seqs = seqlevels(genome)[seqlevels(genome) %in% seqlevels(txdb)]
+#seqs = seqs[1:25] #No Alt
 
-seqlevels(txdb) <- seqs
+#seqlevels(txdb) <- seqs
 
 print("Finding Disjoint Exonic Bins")
 startTime = proc.time()

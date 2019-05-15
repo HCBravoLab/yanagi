@@ -4,6 +4,8 @@ import logging
 from argparse import ArgumentParser, RawTextHelpFormatter
 from subprocess import check_call
 
+import os
+
 
 description = \
     "Description:\n\n" + \
@@ -24,8 +26,9 @@ def main():
     # Setting logging preferences
     logger = logging.getLogger(__name__)
 
+    print(os.path.join("R", "preprocessing_main.R"))
     # Run Preprocessing Step
-    ret = check_call(["Rscript", "R/preprocessing_main.R", args.annotation_file, args.sequence_file, args.output_dir])
+    ret = check_call(["Rscript", os.path.join("R", "preprocessing_main.R"), args.annotation_file, args.sequence_file, args.output_dir])
     
     if ret != 0:
         logger.info("Preprocessing Failed!")
