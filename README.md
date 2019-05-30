@@ -78,7 +78,7 @@ The preprocess operation outputs two files:
 ...
 ````
 
-
+<a id="-segment"/>
 -----------------------
 **Segments Generation**
 =======================
@@ -105,7 +105,7 @@ List of options available:
 
 - **-o**  | **--output-name**: (**Optional**) This is a name prefix used to name output files. If not provided, the default output files are named in the format ```segs_<L>```.
 
-- **-ioe**| **--events-annotation**: (**Optional**) This is a list of .ioe files created by SUPPA. Used if downstream analysis is needed on alternative splicing events. More details in Segment-Based PSI Calculation section. 
+- **-ioe**| **--events-annotation**: (**Optional**) This is a list of .ioe files created by SUPPA. Used if downstream analysis is needed on alternative splicing events. More details in <a href="#-psicalc">`Segment-Based PSI Calculation section`</a>. 
 
 ### **Output files** ###
 
@@ -218,6 +218,8 @@ Note: txs field for segment-pairs counts represent the intersecton of transcript
 =================
 -----------------
 
+![Yanagi's Visualization Example](https://github.com/mgunady/yanagi/blob/master/geneViz.png)
+
 To visualize segments of a specific gene, run the R script found in ```R/vizGeneSegments.R``` using Rstudio or the following Rscript command:
 ```
 Rscript R/vizGeneSegments.R <geneID> <segments.fa.meta> <segmentsDir> <output-filename>
@@ -226,11 +228,40 @@ Rscript R/vizGeneSegments.R <geneID> <segments.fa.meta> <segmentsDir> <output-fi
 Support for visualizing segment counts will be added soon.
 
 
+<a id="-psicalc"/>
 ---------------------------------
 **Segment-based PSI Calculation**
 =================================
 ---------------------------------
 
-Details to be added soon
+After samples are aligned to the segments using command ```align```, one can process the segments/segment-pairs counts obtained to perform alternative splicing analysis. Yanagi provides a command to calculat PSI values based on segments counts in each of the aligned samples.
+This command calculates PSI values of alternative splicing events based on their segment mappings. 
 
+### **Command and options** ###
 
+To calculate PSI values one has to run the following command in the following format:
+```
+python yanagi.py psiCalc  -es <events-to=segments-mapping> -s <segments-meta> -i <segment-counts-directory> -o <output-directory> -opf <output-prefix>
+```
+List of options available:
+
+- **-es**  | **--events2segs**: This is the path to the file mapping splicing events to segments. This file was prepared from yanagi command ```segment```. By passing the optional option ```-ioe``` with the events annotation file as input into the ```segment``` command, it outputs the mapping into ```.evs2segs``` file under the output directory specified in option ```-o```. Refer to section <a href="#-segment">`Segments Generation section`</a> for how to run ```segment``` command.
+
+- **-s** | **--segs-meta**: This is the segments metadata file ```.fa.meta``` obtained from yanagi command ```segment```. Refer to section <a href="#-segment">`Segments Generation section`</a> for how to run ```segment``` command.
+
+- **-i** | **---segCounts-dir**: The path to a directory with segments counts (or segment-pairs counts) obtained from yanagi command ```align```. The directory will have a .tsv file per sample.
+
+- **-o** | **--out-dir**: The output directory.
+
+- **-opf**  | **--output-prefix**: (**Optional**) This is a name prefix used to name output files. If not provided, the default output files will use the input counts filenames for each sample.
+
+### **Output files** ###
+
+The PSI calculation operation outputs a .psi file per sample. Each .psi file is of the following format:
+
+```
+eventID	incCount	exCount	PSI	incSegs	exSegs	incTxs	exTxs	incSegsLen	exSegsLen	incLen
+ENSG00000177697;SE:11:836442-836769:836843-837250:+	6.150537634408602	0.6363636363636364	0.9061	SEG0009700,SEG0009707	SEG0009701	ENST00000322008,ENST00000397420,ENST00000397421,ENST00000524748,ENST00000526693,ENST00000527341,ENST00000528011,ENST00000530320,ENST00000530726	ENST00000529810	372	198	74
+ENSG00000177697;SE:11:833026-834530:834591-836063:+	0.6874154262516915	0.41695501730103807	0.62188	SEG0009666,SEG0009671,SEG0009673,SEG0009684,SEG0009685,SEG0009686	SEG0009667,SEG0009668,SEG0009678,SEG0009679,SEG0009680	ENST00000322008,ENST00000531999	ENST00000397421,ENST00000526661,ENST00000529810,ENST00000530155	739	578	61
+ENSG00000214063;SE:11:842915-847201:847300-850288:+	0.6484149855907781	0.4393939393939394	0.59552	SEG0010382,SEG0010384,SEG0010395,SEG0010396,SEG0010397	SEG0010383	ENST00000397397	ENST00000397411	694	198	99
+```

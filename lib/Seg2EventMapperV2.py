@@ -143,7 +143,7 @@ gevent = ""
 def getSegsForIOEFile(ioeF, outF, segRanges, sortedIdxKeys, segTxs, segLens, mode):
     if mode != "strict":
         mode = "flex"
-    with open(ioeF) as f, open(outF, 'w') as outFile, open(outF+'.'+mode, 'w') as outFS, open(outF+'.'+mode+'.segs', 'w') as outFSS:
+    with open(ioeF) as f, open(outF, 'w') as outFile, open(outF+'.'+mode+".evs2segs", 'w') as outFS, open(outF+'.'+mode+'.segs', 'w') as outFSS:
         header = '\t'.join(['seqname', 'geneID', 'eventID', 'incSegs', 'exSegs', 'incTxs', 'exTxs',
                             'incSegLen', 'exSegLen', 'incLen'])+'\n'
         outFile.write(header)
