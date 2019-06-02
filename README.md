@@ -157,6 +157,7 @@ This GTF contains entries of two possible feature type (column 3): ```exonic_bin
 10	hg19_segs101	segment	45920481	45923934	.	+	.	gene_id "ENSG00000012779"; entry_id "SEG0000004"; exonic_bin_ids "57017+57018"; transcripts "ENST00000483623";
 ```
 
+P.S. Section <a href="#-segsDownloads">`Ready-to-Download Segments Libraries`</a> provides pre-prepared segment libraries of some commonly used genomes.
 
 -------------------------
 **Alignment To Segments**
@@ -268,3 +269,23 @@ ENSG00000177697;SE:11:833026-834530:834591-836063:+	0.6874154262516915	0.4169550
 ENSG00000214063;SE:11:842915-847201:847300-850288:+	0.6484149855907781	0.4393939393939394	0.59552	SEG0010382,SEG0010384,SEG0010395,SEG0010396,SEG0010397	SEG0010383	ENST00000397397	ENST00000397411	694	198	99
 ...
 ```
+
+<a id="-segsDownloads"/>
+
+---------------------------------------
+**Ready-to-download Segment Libraries**
+=======================================
+---------------------------------------
+
+* Segments for human transcriptome Ensembl GRCh37:
+	* For L=100: (<a href="https://zenodo.org/record/2646964/files/hg19_segs100.fa">`FASTA File`</a>, <a href="https://zenodo.org/record/2646964/files/hg19_segs100.fa.meta">`Meta File`</a>)
+	* <a href="https://zenodo.org/record/2646964/files/hg19_5types_noAlt.ioe">`AS Events Annotation (SE, MX, RI, A3, A5)`</a>
+	* <a href="https://zenodo.org/record/2646964/files/hg19_segs100_hg19_5types_noAlt.ioe.flex">`Events-to-segments mapping (SE, MX, RI, A3, A5)`</a>
+	
+* Segments for fruit fly transcriptome Ensembl BDGP6:
+	* For L=100: (<a href="https://zenodo.org/record/2646964/files/Dm6_segs_100.fa">`FASTA File`</a>, <a href="https://zenodo.org/record/2646964/files/Dm6_segs_100.fa.meta">`Meta File`</a>)
+	* <a href="https://zenodo.org/record/2646964/files/Dm6_5types_noAlt.ioe">`AS Events Annotation (SE, MX, RI, A3, A5)`</a>
+	* <a href="https://zenodo.org/record/2646964/files/Dm6_segs_100_Dm6_5types_noAlt.ioe.flex">`Events-to-segments mapping (SE, MX, RI, A3, A5)`</a>
+
+
+
