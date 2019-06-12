@@ -176,7 +176,7 @@ PATH/TO/RAPMAP quasiindex -t PATH/TO/segments.fa -i quasiindex/output/directory
 Once the aligner's index is ready, one can run the alignment step using Yanagi's following command:
 
 ```
-python yanagi.py align -ref <segments-fasta> -o <output-filename> -cmd1 'PATH/TO/RAPMAP quasimap -i quasiindex/output/directory -r PATH/TO/FIRST_READS.fa' --cmd2 'PATH/TO/RAPMAP quasimap -i quasiindex/output/directory -r PATH/TO/SECOND_READS.fa'
+python yanagi.py align -ref <segments-fasta> -o <output-filename> -cmd1 'PATH/TO/RAPMAP quasimap -i quasiindex/output/directory -r PATH/TO/FIRST_READS.fa' -cmd2 'PATH/TO/RAPMAP quasimap -i quasiindex/output/directory -r PATH/TO/SECOND_READS.fa'
 ```
 **Alternatively**, use the provided shell script ```run_segAlign.sh``` by first editing the variables used in it, and choosing the right command for single or paired-end modes.
 
