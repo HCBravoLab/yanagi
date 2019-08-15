@@ -25,7 +25,7 @@ def writeSegPairCounts(outputCountsFilename, segPairs_counts, newsegPairs_counts
     with open(outputCountsFilename, "w") as f:
         f.write("seg1ID\tseg2ID\tcount\tgeneID\tseg1Len\tseg2Len\tseg1StLoc\tseg2StLoc\ttxs\n")
         
-        for segPair in sorted(segPairs_counts.iterkeys()):
+        for segPair in sorted(segPairs_counts):
             count = segPairs_counts[segPair]
             segs = [segsDict[segID] for segID in segPair.split("_")]
             line = "\t".join([segs[0].ID, segs[1].ID, str(count), 
@@ -36,7 +36,7 @@ def writeSegPairCounts(outputCountsFilename, segPairs_counts, newsegPairs_counts
     with open(outputCountsFilename+".newJuncs", "w") as f:
         f.write("seg1ID\tseg2ID\tcount\tgeneID\tseg1Len\tseg2Len\tseg1StLoc\tseg2StLoc\n")
         
-        for segPair in sorted(newsegPairs_counts.iterkeys()):
+        for segPair in sorted(newsegPairs_counts):
             count = newsegPairs_counts[segPair]
             segs = [segsDict[segID] for segID in segPair.split("_")]
             line = "\t".join([segs[0].ID, segs[1].ID, str(count), 
@@ -62,13 +62,21 @@ def writeSegCounts(outputCountsFilename, seg_counts, segsDict):
 def readSAM(fin):
     readAligns = defaultdict(list)
     #c = 0
-    for line in fin:
+    if sys.version_info[0] == 3: # use for python3
+         p = fin
+    else:
+         p = iter(fin.readline, b'')
+    for line in p:
+        #print("======================", line)
         tokens = line.strip().split()
         if line.startswith('@'): #If header line:
             continue
+        #print(tokens)
         readID, flags, segID, pos = tokens[:4]
         if readID[-2]=='/': # take off the suffixes /1,/2 from readID
             readID = readID[:-2]
+        if segID == '*': # end unmapped
+            continue
         #readLen = len(tokens[9])
         readAligns[readID].append((segID, int(flags)))
         #c = c+1
@@ -151,8 +159,9 @@ def runAlignment(cmd):
     start_t = time.time()
     align_proc = subprocess.Popen(cmd,
                                   stdout=subprocess.PIPE,
-                                  stderr=sys.stdout)
-    aligns = readSAM(align_proc.stdout)
+                                  stderr=sys.stdout, universal_newlines=True)
+    with align_proc.stdout:
+        aligns = readSAM(align_proc.stdout)
     print("Done")
     elapsed = time.time() - start_t
     print("Elapsed Time: ", elapsed)
@@ -164,13 +173,6 @@ def runAlignment(cmd):
 #############################
 
 def alignAndCount(segmentReferenceFilename, outf, cmd1, cmd2=None):
-    # alignment threads
-    thread1 = alignThread("AlignThread-1", cmd1.split())
-    thread1.start()
-
-    if cmd2:
-        thread2 = alignThread("AlignThread-2", cmd2.split())
-        thread2.start()
 
     print("Loading Segments Lib...")
     start_t = time.time()
@@ -179,6 +181,14 @@ def alignAndCount(segmentReferenceFilename, outf, cmd1, cmd2=None):
     elapsed = time.time() - start_t
     print("Elapsed Time: ", elapsed)
     ##print(process.memory_info().rss)
+
+    # alignment threads
+    thread1 = alignThread("AlignThread-1", cmd1.split())
+    thread1.start()
+
+    if cmd2:
+        thread2 = alignThread("AlignThread-2", cmd2.split())
+        thread2.start()
 
     thread1.join()
     if cmd2:

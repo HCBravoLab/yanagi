@@ -44,6 +44,9 @@ psiCalculatorSubparser.set_defaults(which="psiCalc")
 
 # Setting logging preferences
 logger = logging.getLogger(__name__)
+# Add handler
+handler = logging.StreamHandler()
+logger.addHandler(handler)
 
 def main():
     try:
