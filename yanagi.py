@@ -65,7 +65,8 @@ def main():
             calculatePSI.main()
             
     except Exception:
-        logger.error("Unknown error: {}".format(sys.exc_info()))
+        #logger.error("Unknown error: {}".format(sys.exc_info()))
+        logger.exception("Error")
         sys.exit(1)
         
 if __name__ == '__main__':

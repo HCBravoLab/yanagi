@@ -419,7 +419,7 @@ plotGene <- function(gene, sampleTable=NA,
   
   if(!is.na(export_filename)) {
     print(paste0("Exporting Output to ", export_filename))
-    ggsave(export_filename, plot = p, device=png(), width=10, height=15)
+    ggsave(export_filename, plot = p, device=png(), width=20, height=15)
   }
   #ggsave(plot = p, paste0(dir_prefix, gene, ".png"), width=20, height=10)
 }

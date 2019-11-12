@@ -1,3 +1,11 @@
 test_dm3/
 __pycache__/
 lib/__pycache__/
+
+# Compiled files
+*.pyc
+lib/*.pyc
+Rplots.pdf
+
+# Test directories
+test_*/

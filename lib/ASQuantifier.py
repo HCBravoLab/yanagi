@@ -3,10 +3,11 @@ from collections import defaultdict
 from collections import Counter
 
 from lib.utils import *
+from lib.Segments import *
 
 import os
 
-def loadSegCounts(inFile):
+def loadSegCounts(inFile, segsDict):
     segCounts = defaultdict(list)
     tot_counts = 0
     mode = 'SE' #SE for single-end, PE for paired-end
@@ -22,7 +23,9 @@ def loadSegCounts(inFile):
                 tot_counts += int(float(tokens[1]))
             else:
                 seg1ID, seg2ID, count = tokens[:3]
-                txs = tokens[-1]
+                #txs = tokens[-1]
+                txs = segsDict[seg1ID].txs & segsDict[seg2ID].txs
+                txs = set2Str(txs)
                 #txs = segTxs[seg1ID] & segTxs[seg2ID]
                 if seg1ID == seg2ID:
                     segCounts[seg1ID].append((txs, 2*int(count)))
@@ -32,12 +35,12 @@ def loadSegCounts(inFile):
                 tot_counts += 2*int(count)
     return(segCounts, tot_counts)
 
-def writeSPM(outFile, segCounts, segIDs, segLens):
+def writeSPM(outFile, segCounts, segIDs, segsDict):
     sc_n = dict([(segID, 0) for segID in segIDs])
     tot_sc_n = 0
     for segID in sorted(segCounts):
         sc = sum([c[1] for c in segCounts[segID]])
-        c_n = sc/segLens[segID]*1.0
+        c_n = sc/segsDict[segID].length*1.0
         sc_n[segID] = c_n
         tot_sc_n += c_n
     with open(outFile, 'w') as outF:
@@ -71,14 +74,17 @@ def quantEvents(ioeSegFile, outFile, segCountsIdx):
             exCount = sumSegsCount(str2Set(exSegs), segCountsIdx, exTxs)
             incNC = incCount/max(int(incSegsLen), 1)
             exNC = exCount/max(int(exSegsLen), 1)
-            PSI = incNC/(incNC+exNC+0.001) if incNC > 0 else 0
+            PSI = incNC/(incNC+exNC) if incNC > 0 else 0
             PSI = int(PSI*100000.0)/100000.0
            
-            outF.write('\t'.join([eventID, str(incNC), str(exNC), str(PSI),
-                                  incSegs+",", exSegs+",", incTxs, exTxs,
+            outF.write('\t'.join([eventID, str(incCount), str(exCount), str(PSI),
+                                  incSegs, exSegs, incTxs, exTxs,
                                   incSegsLen, exSegsLen, incLen])+"\n")
 
-def quantifyEvents(segEventsFname, samplesFnames, outDir, out_prefix, segIDs, segLens):
+def quantifyEvents(segEventsFname, samplesFnames, outDir, out_prefix, segsMetaFname):
+    print("Load Segments Library")
+    segsDict, segIDs = load_SegmentsLib(segsMetaFname)
+
     print("Quantify Events")
     
     for sampleFname in samplesFnames:
@@ -86,11 +92,11 @@ def quantifyEvents(segEventsFname, samplesFnames, outDir, out_prefix, segIDs, se
         outFile = os.path.join(outDir, out_prefix+"_"+sampleID+".psi")
         print(outFile)
 
-        segCountsIdx, tot_counts = loadSegCounts(sampleFname)
+        segCountsIdx, tot_counts = loadSegCounts(sampleFname, segsDict)
         print("segCounts Loaded")
         quantEvents(segEventsFname, outFile, segCountsIdx)
         print("Calculate SPM")
-        writeSPM(os.path.join(outDir, sampleID+".SPM"), segCountsIdx, segIDs, segLens)
+        writeSPM(os.path.join(outDir, sampleID+".SPM"), segCountsIdx, segIDs, segsDict)
 
 #import glob
 if __name__ == '__main__':

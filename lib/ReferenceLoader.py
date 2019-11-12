@@ -47,24 +47,36 @@ class TX:
     chrome = ""
     txID = ""
     exons = ""
+    exs = []
+    strand = "+"
+    length = 0
 
-    def __init__(self, key_id, chrome, txID, exons):
+    def __init__(self, key_id, chrome, txID, exons, strand, exBins_dict):
         self.key_id = key_id
         self.chrome = chrome
         self.txID = txID
         self.exons = exons
+        self.strand = strand
+        exs = [int(x) for x in exons.strip().split(',')]
+        self.exs = sorted(exs, reverse=(strand == "-"))
+        for ex in self.exs:
+            self.length += exBins_dict[ex].width
 
-def load_Txs2Exs(inDir):
+def load_Txs2Exs(inDir, exBins_dict):
     numTxs = 0
     genes = defaultdict(list)
     geneIDSorted = set()
+    txsDict = defaultdict(list)
     with open(os.path.join(inDir, 'txs2bins.tsv')) as file_hndl:
         for i, line in enumerate(file_hndl):
             if i == 0:   #Skip header
                 continue
             key_id, chrome, geneID, txID, strand, exons = line.strip().split('\t')
-            genes[geneID].append(TX(key_id, chrome, txID, exons))
+            tx = TX(key_id, chrome, txID, exons, strand, exBins_dict)
+            genes[geneID].append(tx)
+            txsDict[txID] = tx
             geneIDSorted.add(chrome+":"+geneID)
             numTxs += 1
     geneIDSorted = [genechr.split(":")[1] for genechr in sorted(geneIDSorted)]
-    return(genes, geneIDSorted, numTxs)
+    return(genes, geneIDSorted, numTxs, txsDict)
+

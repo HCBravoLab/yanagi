@@ -11,7 +11,8 @@ def loadSegmentsIndex(segFile, DExons):
         for lc, line in enumerate(sFile):
             if lc == 0: #skip header
                 continue
-            segID, chrm, geneID, txAnIDs, binIDs, start, end, strand, length = line.strip().split()
+            tokens = line.strip().split("\t")
+            segID, chrm, geneID, txAnIDs, binIDs, start, end, strand, length = tokens[:9]
             segTxs[segID] = str2Set(txAnIDs)
             segLens[segID] = int(length)
             exons = [DExons[int(ex)] for ex in binIDs.split(',')]
@@ -30,13 +31,9 @@ def loadSegmentsIndex(segFile, DExons):
                 segRanges[geneID][st].add(segID)
                 segRanges[geneID][ed].add(segID)
 
-
     segRangesSortedKeys = {}
     for geneID in segRanges:
         segRangesSortedKeys[geneID] = sorted(segRanges[geneID].keys())
-        #if geneID == "ENSG00000142082":
-        #    print(segRangesSortedKeys)
-        #    print(segRanges[geneID])
     return (segRanges, segRangesSortedKeys, segTxs, segLens)
 
 
@@ -46,8 +43,6 @@ def getSegsForRanges(geneID, granges, txs, index, sortedIdxKeys, segTxs, mode):
     segs = set()
     geneIdx = index[geneID]
     sortedKeys = sortedIdxKeys[geneID]
-    #if geneID == "ENSG00000142082":
-    #    print(sortedKeys)
     for i, grange in enumerate(granges):
         segs |= (geneIdx[grange[0]] & geneIdx[grange[1]])
         if grange[2] == "E":

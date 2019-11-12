@@ -30,16 +30,7 @@ def main():
     if not args.out_prefix:
         args.out_prefix = os.path.basename(args.events2segs).split(".")[0]
 
-    segIDs = []
-    segLens = {}
-    with open(args.segs_meta) as f:
-        for i, line in enumerate(f):
-            if i == 0:
-                continue
-            tokens = line.strip().split("\t")
-            segIDs.append(tokens[0])
-            segLens[tokens[0]] = int(tokens[-1])
-    quantifyEvents(args.events2segs, samplesFnames, args.out_dir, args.out_prefix, segIDs, segLens)
+    quantifyEvents(args.events2segs, samplesFnames, args.out_dir, args.out_prefix, args.segs_meta)
 
     logger.info("Done")
     

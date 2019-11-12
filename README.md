@@ -68,7 +68,7 @@ The preprocess operation outputs two files:
 ...
 ```
 
-2.  txs2bin.tsv: A file with transcripts-to-bins information.
+2.  txs2bins.tsv: A file with transcripts-to-bins information.
 
 ```
 	chr	geneID	txID	bins	strand

@@ -71,7 +71,26 @@ def refineSegExs(loc, used_exs, used_widths, seg_width, end_pos, new_loc, L):
             new_loc = used_exs[0].end + 1 - rem
     return seg_width, end_pos, new_loc
 
+	
+def relativePosInTranscript(genomicPos, exsInTx, exBins_dict):
+	pos = 0
+	#print(segID, tx.exs, ex0)
+	for exID in exsInTx:
+		ex = exBins_dict[exID]
+		if (ex.strand == "+" and ex.end <= genomicPos) or (ex.strand == "-" and ex.start > genomicPos):
+			pos += ex.width
+		else:
+			pos += genomicPos - ex.start
+			break
+	return pos 
 
+def posInTxsStr(genomicPos, txIDs, exBins_dict, txsDict):
+	poslst = []
+	for txID in txIDs:
+		pos = relativePosInTranscript(genomicPos, txsDict[txID].exs, exBins_dict)
+		poslst.append(str(pos))
+	return ','.join(poslst)
+	
 #################################
 ######## SegmentsGraph ##########
 #################################
@@ -112,9 +131,9 @@ class SegContig:
         self.end = node.end
         self.seg_key.addExs(node.key.exs)
         self.nodeIDs.append(node.keyStr())
+		
 
-
-    def finalizeSegment(self, chrome, geneID, exBins_dict):
+    def finalizeSegment(self, chrome, geneID, exBins_dict, txsDict, numTxsInGene):
         exs = self.seg_key.getExs()
         strand = exBins_dict[exs[0]].strand
         exs = sorted(exs, reverse=(strand == "-"))
@@ -146,11 +165,12 @@ class SegContig:
         identifier = ">%s %s:%s:%d:(%s):%d:%s TXs:%s segtype:%s" % (segID, chrome, geneID,
                                                     seg_start, exs, self.end, strand, txs, self.segtype)
         identifier = ">%s" % (segID)
-        meta = '\t'.join([segID, chrome, geneID, txs, exs, str(seg_start), str(self.end), strand, str(len(self.seq))])+'\n'
+        meta = '\t'.join([segID, chrome, geneID, txs, exs, str(seg_start), str(self.end), strand, str(len(self.seq)), 
+							posInTxsStr(seg_start, txs.split(','), exBins_dict, txsDict), str(numTxsInGene)])+'\n'
         return segID, meta, identifier + '\n' + self.seq + '\n'
 
 def parseSegGraph(SG, startNodes, redundantNodes,
-                  chrome, geneID, DExons):
+                  chrome, geneID, DExons, txsDict, numTxsInGene):
     output = ""
     out_meta = ""
     out_extra = ""
@@ -171,7 +191,7 @@ def parseSegGraph(SG, startNodes, redundantNodes,
                 next_node = SG[next_key.exsKey()][next_key.pos]
                 done = next_node.isStart
                 current = next_node
-        segID, meta, seg_str = segment.finalizeSegment(chrome, geneID, DExons)
+        segID, meta, seg_str = segment.finalizeSegment(chrome, geneID, DExons, txsDict, numTxsInGene)
         output = output + seg_str
         out_meta += meta
         out_extra += segID + " " + '|'.join(segment.nodeIDs) + "\n"
@@ -190,7 +210,7 @@ def createSegments(L, inDir, outname, eventsFiles=None, shreded=False, mode='fle
     start_time = time.time()
     # Load input
     DExons = load_disjointExons(inDir)
-    txs2exons, geneIDSorted, numTxs = load_Txs2Exs(inDir)
+    txs2exons, geneIDSorted, numTxs, txsDict = load_Txs2Exs(inDir, DExons)
     print("ET: ", time.time() - start_time)
 
     #print("Creating SG ET:", SG_total_time)
@@ -202,7 +222,8 @@ def createSegments(L, inDir, outname, eventsFiles=None, shreded=False, mode='fle
     output_file = open(fulloutname, "w")
     outf_meta = open(fulloutname+".meta", "w")
     outf_meta.write('\t'.join(["segID", "chrom", "geneID", "txAnnIDs",
-                               "binIDs", "st", "end", "strand", "length"])+'\n')  #Meta header    
+                               "binIDs", "st", "end", "strand", "length",
+                               "posInTxs", "numTxsInGene"])+'\n')  #Meta header    
     
     output_gtf = open(fulloutname[:-3]+".gtf", "w")
     writeExonicBinsToGTF(output_gtf, outname, DExons, txs2exons, geneIDSorted)
@@ -287,7 +308,7 @@ def createSegments(L, inDir, outname, eventsFiles=None, shreded=False, mode='fle
         start_time = time.time()
         # Generate Segments in a gene by parseing the generated segments graph
         output, out_meta, output_extra = parseSegGraph(SG, startNodes, redundantNodes,
-                                                       chrome, geneID, DExons)
+                                                       chrome, geneID, DExons, txsDict, len(txs))
         output_file.write(output)
         outf_meta.write(out_meta)
         writeSegmentsToGTF(output_gtf, outname, out_meta.split("\n"))

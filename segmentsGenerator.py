@@ -33,7 +33,7 @@ def main():
     #print(args)
     if not args.output_name:
         args.output_name = "segs_"+args.max_overlap
-    createSegments(int(args.max_overlap), args.work_dir, args.output_name, args.events_annotation, args.mode)
+    createSegments(int(args.max_overlap), args.work_dir, args.output_name, args.events_annotation, False, args.mode)
 
     logger.info("Done")
     

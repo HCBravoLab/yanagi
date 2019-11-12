@@ -12,20 +12,21 @@ from lib.Segments import *
 from lib.utils import *
 
 class alignThread (threading.Thread):
-   def __init__(self, threadID, cmd):
+   def __init__(self, threadID, cmd, segsSeq):
       threading.Thread.__init__(self)
       self.threadID = threadID
       self.cmd = cmd
+      self.segsSeq = segsSeq
       self.aligns = defaultdict(list)
    def run(self):
       print("Starting " + self.threadID)
-      self.aligns = runAlignment(self.cmd)
+      self.aligns = runAlignment(self.cmd, self.segsSeq)
 
 def writeSegPairCounts(outputCountsFilename, segPairs_counts, newsegPairs_counts, segPairs_txs, segsDict):
     with open(outputCountsFilename, "w") as f:
         f.write("seg1ID\tseg2ID\tcount\tgeneID\tseg1Len\tseg2Len\tseg1StLoc\tseg2StLoc\ttxs\n")
         
-        for segPair in sorted(segPairs_counts):
+        for segPair in sorted(segPairs_counts.iterkeys()):
             count = segPairs_counts[segPair]
             segs = [segsDict[segID] for segID in segPair.split("_")]
             line = "\t".join([segs[0].ID, segs[1].ID, str(count), 
@@ -36,7 +37,7 @@ def writeSegPairCounts(outputCountsFilename, segPairs_counts, newsegPairs_counts
     with open(outputCountsFilename+".newJuncs", "w") as f:
         f.write("seg1ID\tseg2ID\tcount\tgeneID\tseg1Len\tseg2Len\tseg1StLoc\tseg2StLoc\n")
         
-        for segPair in sorted(newsegPairs_counts):
+        for segPair in sorted(newsegPairs_counts.iterkeys()):
             count = newsegPairs_counts[segPair]
             segs = [segsDict[segID] for segID in segPair.split("_")]
             line = "\t".join([segs[0].ID, segs[1].ID, str(count), 
@@ -57,32 +58,76 @@ def writeSegCounts(outputCountsFilename, seg_counts, segsDict):
     
 
 ######################################
+            
+import re
+alt_map = {'ins':'0'}
+complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'} 
+
+def reverse_complement(seq):    
+    for k,v in alt_map.iteritems():
+        seq = seq.replace(k,v)
+    bases = list(seq) 
+    bases = reversed([complement.get(base,base) for base in bases])
+    bases = ''.join(bases)
+    for k,v in alt_map.iteritems():
+        bases = bases.replace(v,k)
+    return bases
+
+def getBestAligns(aligns):
+	best1 = []
+	best2 = []
+	best3 = []
+	for a in aligns:
+		a = (a[0], min(a[1], a[1]^0x900), a[2], a[3])
+		if a[3] and 'S' not in a[2]:
+			best1.append(a)
+		if a[3]:
+			best2.append(a)
+		if 'S' not in a[2]:
+			best3.append(a)
+	if best1:
+		return(best1)
+	if best2:
+		return(best2)
+	if best3:
+		return(best3)
+	return(aligns)
+
 ######################################
 
-def readSAM(fin):
+def readSAM(fin, segsSeq):
     readAligns = defaultdict(list)
     #c = 0
-    if sys.version_info[0] == 3: # use for python3
-         p = fin
-    else:
-         p = iter(fin.readline, b'')
-    for line in p:
-        #print("======================", line)
+    for line in fin:
         tokens = line.strip().split()
         if line.startswith('@'): #If header line:
             continue
-        #print(tokens)
-        readID, flags, segID, pos = tokens[:4]
+        readID, flags, segID, pos, v, q = tokens[:6]
         if readID[-2]=='/': # take off the suffixes /1,/2 from readID
             readID = readID[:-2]
-        if segID == '*': # end unmapped
-            continue
         #readLen = len(tokens[9])
-        readAligns[readID].append((segID, int(flags)))
+
+	#if q != '100M':
+	#	continue
+        if segsSeq:
+           readSeq = tokens[9].replace('N', '.')
+           segSeq = segsSeq[segID][int(pos)-1:]
+           segSeq = segSeq[:min(len(segSeq), len(readSeq))]
+           #perfect = (re.search(readSeq[:10], segsSeq[segID]) != None and re.search(readSeq[-10:], segsSeq[segID]) != None) or \
+           #	(re.search(reverse_complement(readSeq[:10]), segsSeq[segID]) != None and re.search(reverse_complement(readSeq[-10:]), segsSeq[segID]) != None)
+           perfect = (readSeq[:10] == segSeq[:10] and readSeq[-10:] == segSeq[-10:]) or \
+                     (reverse_complement(readSeq[:10]) == segSeq[:10] and reverse_complement(readSeq[-10:]) == segSeq[-10:])
+           #perfect = len(segSeq) == len(readSeq) and re.search(readSeq[:10], segSeq[:10]) != None and re.search(readSeq[-10:], segSeq[-10:]) != None
+        else:
+           perfect = True
+        readAligns[readID].append((segID, int(flags), q, perfect))
+
+        #readAligns[readID].append((segID, int(flags)))
         #c = c+1
         #if c % 1000000 == 0:
         #    print("Seen", str(c), "alignments")
     return(readAligns)
+
 
 def validOrientation(flags1, flags2):
     flag1Bin = bin(flags1)[2:]
@@ -98,7 +143,7 @@ def validOrientation(flags1, flags2):
     validOrientationTrue = ((flags1Orientation + flags2Orientation) == 16)
     return validOrientationTrue
         
-def processPairAligns(aligns1, aligns2, segsDict):
+def processPairAligns(aligns1, aligns2, segsDict, quickMode):
     segPairs_counts = Counter()
     newsegPairs_counts = Counter()
     readsMapped = [0, 0, 0] # [mapped, notmapped_due_txs, notmapped_due_ori]
@@ -140,11 +185,15 @@ def processPairAligns(aligns1, aligns2, segsDict):
           "Unmapped Due Txs:", readsMapped[1], "Unmapped Due Direction:", readsMapped[2])
     return(segPairs_counts, newsegPairs_counts, segPairsTxs)
 
-def processSingleAligns(aligns):
+def processSingleAligns(aligns, quickMode):
     seg_counts = Counter()
     readsMapped_cnt, multimapped_cnts = 0, 0
     for readID in aligns:
         als = aligns[readID]
+        
+        if not quickMode:
+           als = getBestAligns(als)
+        
         if len(als) > 1:
             multimapped_cnts += 1
         for al in als:
@@ -154,14 +203,13 @@ def processSingleAligns(aligns):
     print("Mapped Reads:", readsMapped_cnt, "Multimapped Reads:", multimapped_cnts)
     return(seg_counts)
 
-def runAlignment(cmd):
+def runAlignment(cmd, segsSeq):
     print("Running Alignment Command...", cmd)
     start_t = time.time()
     align_proc = subprocess.Popen(cmd,
                                   stdout=subprocess.PIPE,
-                                  stderr=sys.stdout, universal_newlines=True)
-    with align_proc.stdout:
-        aligns = readSAM(align_proc.stdout)
+                                  stderr=sys.stdout)
+    aligns = readSAM(align_proc.stdout, segsSeq)
     print("Done")
     elapsed = time.time() - start_t
     print("Elapsed Time: ", elapsed)
@@ -172,22 +220,26 @@ def runAlignment(cmd):
 ######## Main Logic #########
 #############################
 
-def alignAndCount(segmentReferenceFilename, outf, cmd1, cmd2=None):
-
+def alignAndCount(segmentReferenceFilename, outf, cmd1, cmd2=None, quickMode=False):
+   
     print("Loading Segments Lib...")
     start_t = time.time()
     segsDict, segIDs = load_SegmentsLib(segmentReferenceFilename)
+    segsSeq = {}
+    if quickMode:
+       segsSeq = load_segmentsSeq(segmentReferenceFilename[:-5])
     print("Done!")
     elapsed = time.time() - start_t
     print("Elapsed Time: ", elapsed)
     ##print(process.memory_info().rss)
 
+   
     # alignment threads
-    thread1 = alignThread("AlignThread-1", cmd1.split())
+    thread1 = alignThread("AlignThread-1", cmd1.split(), segsSeq)
     thread1.start()
 
     if cmd2:
-        thread2 = alignThread("AlignThread-2", cmd2.split())
+        thread2 = alignThread("AlignThread-2", cmd2.split(), segsSeq)
         thread2.start()
 
     thread1.join()
@@ -197,9 +249,9 @@ def alignAndCount(segmentReferenceFilename, outf, cmd1, cmd2=None):
     print("Processing Alignments...")
     start_t = time.time()
     if cmd2:    # Paired-end
-        segPairs_counts, newsegPairs_counts, segPairs_txs = processPairAligns(thread1.aligns, thread2.aligns, segsDict)
+        segPairs_counts, newsegPairs_counts, segPairs_txs = processPairAligns(thread1.aligns, thread2.aligns, segsDict, quickMode)
     else:       # Single-end
-        seg_counts = processSingleAligns(thread1.aligns)
+        seg_counts = processSingleAligns(thread1.aligns, quickMode)
 
     print("Done!")
     elapsed = time.time() - start_t
