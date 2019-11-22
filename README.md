@@ -1,6 +1,6 @@
 # Yanagi: Transcript Segment Library Construction for RNA-Seq Quantification
-## Update July 10th, 2018: Check our recent manuscript for detailed formulation of segments and their usage in gene and alternative splicing analysis https://www.biorxiv.org/content/early/2018/07/08/364281
-## Source code based on the work presented in paper to appear in proceedings of WABI 2017
+## Source code based on the work presented in Yanagi: Fast and interpretable segment-based alternative splicing and gene expression analysis (https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-2947-6)
+## Update Nov 18th, 2019: Some major changes are pushed to improve the usability of the pipeline. And introduced the use of Yanagi-count as the preferred alignment tool based on RapMap's quasi mapping to provide segment counts.
 
 ## Abstract
 
@@ -78,6 +78,29 @@ The preprocess operation outputs two files:
 ...
 ````
 
+**Alternative Splicing Events Generation**
+==========================================
+
+If the downstream analysis involves studying alternative splicing events present in the transcriptome. Then this step is needed to prepared the annotation of those events (Skip this step otherwise).
+Yanagi uses the same events definition and code used in [SUPPA](https://github.com/comprna/SUPPA)(eventGenerator command).
+
+To generate the list of events given the GTF (unzipped) of the transcriptome one can run that command:
+```
+python eventGenerator.py -i <gtf-file> -o <output-directory-and-prefix> -f ioe -e <list-of-event-types-space-separated>
+```
+List of options available:
+- **-e**  | **--event-type**: (only used for local AS events) space separated list of events to generate from the following list:
+
+  - **SE**: Skipping exon (SE)
+  - **SS**: Alternative 5' (A5) or 3' (A3) splice sites (generates both)
+  - **MX**: Mutually Exclusive (MX) exons
+  - **RI**: Retained intron (RI)
+  - **FL**: Alternative First (AF) and Last (AL) exons (generates both)
+
+Note that a description of each event type and definition can be found on [SUPPA](https://github.com/comprna/SUPPA)'s page.
+The command generates a separate .ioe file of the list of events of each event type provided in the event-type option.
+The shell script ```merge_ioe_files.sh``` can be edited for use to merge the separate .ioe files into one file, or to filter out events outside of the primary transcriptome assembly.
+
 <a id="-segment"/>
 
 -----------------------
@@ -106,7 +129,7 @@ List of options available:
 
 - **-o**  | **--output-name**: (**Optional**) This is a name prefix used to name output files. If not provided, the default output files are named in the format ```segs_<L>```.
 
-- **-ioe**| **--events-annotation**: (**Optional**) This is a list of .ioe files created by SUPPA. Used if downstream analysis is needed on alternative splicing events. More details in <a href="#-psicalc">`Segment-Based PSI Calculation section`</a>. 
+- **-ioe**| **--events-annotation**: (**Optional**) This is a list of .ioe files annotating alternative splicing events present in the corresponding transcriptome. Used if downstream analysis is needed on alternative splicing events. More details in <a href="#-psicalc">`Segment-Based PSI Calculation section`</a>. 
 
 ### **Output files** ###
 
@@ -162,6 +185,10 @@ P.S. Section <a href="#-segsDownloads">`Ready-to-Download Segments Libraries`</a
 -------------------------
 **Alignment To Segments**
 =========================
+-------------------------
+
+Since the update on Nov 2019, we strongly recommend to use [Yanagi-count](https://github.com/mgunady/Yanagi-count) as an alignment tool with segments support for better usability and support of yanagi's segments. 
+Otherwise, use the following subcommand in yanagi to use any other transcriptome aligner as long as it reports output in SAM format.
 -------------------------
 
 This command runs a given alignment command to align RNA-seq reads into the segments library as a reference. The main use of this command is to facilitate aligning paired-end reads to obtain segment-pair counts.
@@ -288,4 +315,9 @@ ENSG00000214063;SE:11:842915-847201:847300-850288:+	0.6484149855907781	0.4393939
 	* <a href="https://zenodo.org/record/2646964/files/Dm6_segs_100_Dm6_5types_noAlt.ioe.flex">`Events-to-segments mapping (SE, MX, RI, A3, A5)`</a>
 
 
+---------------------------------------
+**License**
+=======================================
+---------------------------------------
 
+Yanagi is released under the MIT license.
