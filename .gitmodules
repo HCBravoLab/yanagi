@@ -1,0 +1,3 @@
+[submodule "yanagiCount"]
+	path = yanagiCount
+	url = https://github.com/mgunady/Yanagi-count.git
