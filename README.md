@@ -17,11 +17,23 @@ Analysis of differential alternative splicing from RNA-seq data is complicated b
 
 Yanagi has been developed and tested in Python 3.7 and R 3.5.
 Yanagi uses the following modules:
-Python:
-- tqdm
-R (Bioconductor):
-- GenomicFeatures
-- Biostrings
+* Python:
+  - tqdm
+
+* R (Bioconductor):
+  - GenomicFeatures
+  - Biostrings
+ 
+----------------------------
+**Download**
+============================
+----------------------------
+
+Download yanagi by cloning the repository through the ``Clone or download`` button on the top right of this page. Or by running the clone command in git. Then change directory into the created directory where yanagi source is downloaded.
+```
+git clone https://github.com/HCBravoLab/yanagi.git
+cd yanagi
+```
 
 **Command and subcommand structure**
 ==============
@@ -36,6 +48,9 @@ where the subcommand can be one of these options:
 - **preprocess**    : Preprocesses transcriptome annotation by breaking exons into disjoint exonic bins and find their transcript mapping.
 - **segment**       : Generates a set of maximal L-disjoint segments from the preprocessed transcriptome annotation.
 - **align**         : Pseudo aligns reads (single or paired-end) into the segments and obtain segment counts (single segment or segment pair counts).
+- **psiCalc**       : Calculates PSI values of alternative splicing events based on their segment mappings.
+
+**Note: This tutorial assumes that all commands are excuted from inside the directory where yanagi is downloaded (refer to the previous Download section).**
 
 ----------------------------
 **Annotation Preprocessing**
@@ -49,13 +64,13 @@ Yanagi generate disjoint exonic bins and their transcripts mappings from an inpu
 
 To preprocess the transcriptome annotation subject to segmentation one has to run the following command in the following format:
 ```
-python yanagi.py preprocess -gtf <gtf-file> -fa <fasta-file> -o <output-directory>
+python yanagi.py preprocess -gtf <gtf-file> -fa <fasta-file> -o <work-directory>
 ```
 Note that throughout this tutorial, we will use the same directory <output-directory> as the working directory when needed in different commands.
 
 ### **Output files** ###
 
-The preprocess operation outputs two files:
+The preprocess operation outputs two main files:
 
 1.  disjoint_bins.tsv: A file with the structural and sequence information of each constructed disjoint exonic bin.
 
@@ -77,6 +92,8 @@ The preprocess operation outputs two files:
 3	1	ENSG00000223972	ENST00000518655	3,4,5,6,7,8,9,14,15,17,18	+
 ...
 ````
+
+Another output file ``exons2bins.tsv`` is generated from that step. That extra file contains a mapping between the exons/introns annotated in the .gtf file and the disjoint exonic bins (reported in disjoint_bins.tsv file) that are used as the building blocks for the splice graph used inside of yanagi.
 
 **Alternative Splicing Events Generation**
 ==========================================
@@ -123,7 +140,7 @@ python yanagi.py segment -l <read-length> -wd <work-directory>
 ```
 List of options available:
 
-- **-l**  | **--max-overlap**: This (integer) parameter value controls the maximum overlap between any two (L-disjoint) generated segments. Yanagi allows for up to L-length overlap between segments to span possible junctions. A typical choice of L would equal to the expected read length.
+- **-l**  | **--max-overlap**: This (integer) parameter value controls the maximum overlap between any two (L-disjoint) generated segments. A typical choice of l would equal to the expected read length. Refer to Yanagi's [paper](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-2947-6) for more details on L-disjointness.
 
 - **-wd** | **--work-dir**: This is the work directory where the preprocessed annotation files exist (same output directory used in the preprocess subcommand). This directory must have two files ```disjoint_bins.tsv``` and ```txs2bins.tsv```.
 
@@ -135,7 +152,7 @@ List of options available:
 
 The segmentation operation outputs three files:
 
-1. <output-name>.fa: A FASTA file of the segments library representing the transcriptome.
+1. ``<output-name>.fa``: A FASTA file of the segments library representing the transcriptome.
 
 ```
 >SEG0000001
@@ -149,7 +166,7 @@ GATCCGGCGCTGCACAGAGCTGCCCGAGAAGCTCCCGGTGACCACGGAGATGGTAGAGTGCAGCCTGGAG...
 ...
 ````
 
-2. <output-name>.meta: A file of metadata describing the structure of each segment and how it was formed.
+2. ``<output-name>.fa.meta``: A file of metadata describing the structure of each segment and how it was formed.
 
 ```
 segID	chrom	geneID	txAnnIDs	binIDs	st	end	strand
@@ -160,7 +177,7 @@ SEG0000004	10	ENSG00000012779	ENST00000483623	57017,57018	45920481	45923934	+
 ...
 ```
 
-3. <output-name>.gtf: A GTF file describing both exonic bins and segments. This file is intended for visualization of segments. Check Section Visualization.
+3. ``<output-name>.gtf``: A GTF file describing both exonic bins and segments. This file is intended for visualization of segments. Check Section Visualization.
 
 This GTF contains entries of two possible feature type (column 3): ```exonic_bin``` or ```segment```. Each exonic bin or segment has only one entry in the file. Entries that describe lists (like transcripts for exonic bins, or bins for segments) are placed as lists separated by '+'.
 
@@ -193,7 +210,7 @@ Otherwise, use the following subcommand in yanagi to use any other transcriptome
 
 This command runs a given alignment command to align RNA-seq reads into the segments library as a reference. The main use of this command is to facilitate aligning paired-end reads to obtain segment-pair counts.
 
-In this tutorial, we assume to use RapMap (https://github.com/COMBINE-lab/RapMap) to perform pseudo-alignment. However, other alignment tools can be used and the following commands are to be adjusted accordingly.
+In this tutorial, we assume the use of RapMap (https://github.com/COMBINE-lab/RapMap) to perform pseudo-alignment. However, other alignment tools can be used and the following commands are to be adjusted accordingly.
 Note! The indexing step is done separately from yanagi's pipeline. As an example, to index the segments library using RapMap, follow this command format:
 
 ```
