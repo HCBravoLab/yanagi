@@ -3,6 +3,7 @@ library(grid)
 library(gridExtra)
 library(reshape2)
 library(tidyverse)
+library(data.table)
 
 #######################################
 ## Load Reference and Segments Info
@@ -11,7 +12,8 @@ library(tidyverse)
 loadSegmentsMETA <- function(filename) {
   
   print("Loading Segments Metadata")
-  df = read.table(filename, sep="\t", fill = TRUE, header=T)
+  df = as.data.frame(fread(filename, sep="\t", fill = TRUE, header=T))
+  print(head(df))
   
   ##################################
   print("Preparing segs2exs/txs mapping")
@@ -30,8 +32,9 @@ loadSegmentsMETA <- function(filename) {
 
 loadDExs <- function(filename) {
   print("Loading text File")
-  d = read.table(filename, sep="\t", fill = TRUE, header=T)
+  d = as.data.frame(fread(filename, sep="\t", fill = TRUE, header=T))
   colnames(d)[1] = "exID"
+  print(head(d))
   #colnames(d) = c("exID", "chrm", "start", "end", "strand", "seq")
   d$lens = d$end - d$start + 1
   return(d)
@@ -39,8 +42,9 @@ loadDExs <- function(filename) {
 
 loadTxs2Dxs <- function(filename) {
   print("Loading text File")
-  d = read.table(filename, sep="\t", fill = TRUE, header=T)
+  d = as.data.frame(fread(filename, sep="\t", fill = TRUE, header=T))
   colnames(d)[c(1,4)] = c("txID", "txName")
+  print(head(d))
   
   ##################################
   print("Preparing txs2exs mapping")
@@ -57,7 +61,7 @@ loadTxs2Dxs <- function(filename) {
 loadTXTPMs <- function(dir_prefix, samples, suffix) {
   df = NA
   for(sample in samples) {
-    d = read.table(paste0(dir_prefix, sample, suffix), header = TRUE)
+    d = as.data.frame(fread(paste0(dir_prefix, sample, suffix), header = TRUE))
     if(is.na(df)) {
       df = d
       colnames(df) = c("txID", paste0("S", sample))
@@ -71,7 +75,7 @@ loadTXTPMs <- function(dir_prefix, samples, suffix) {
 loadSCs <- function(dir_prefix, samples, suffix) {
   df = NA
   for(sample in samples) {
-    d = read.table(paste0(dir_prefix, sample, suffix), header = FALSE)
+    d = as.data.frame(fread(paste0(dir_prefix, sample, suffix), header = FALSE))
     colnames(d) = c("segID", "count")
     if(is.na(df)) {
       df = d
@@ -98,7 +102,8 @@ plotGene <- function(gene, sampleTable=NA,
                      landscape=FALSE,
                      L = 100,
                      view_SC='count',
-                     DESegs = c()) {
+                     DESegs = c(),
+                     axis_size.y=15, axis_size.x=7) {
   # Filter for gene
   segsf = segsFASTA$segs[segsFASTA$segs$geneID == gene,]
   orderedSegs = segsf$segID[order(segsf$st, decreasing = segsf$strand[1]=="+")]
@@ -119,7 +124,7 @@ plotGene <- function(gene, sampleTable=NA,
   
   segsf$segID = factor(segsf$segID, levels=orderedSegs)
   segs2exs$segs = factor(segs2exs$segs, levels = orderedSegs)
-  #segs2exs$exons = factor(segs2exs$exons, levels = orderedExs)
+  segs2exs$exons = factor(segs2exs$exons, levels = orderedExs)
   oddRows = orderedExs[c(TRUE, FALSE)]
   #segs2exs$value[segs2exs$exons %in% oddRows & segs2exs$value == 0] = 2
   
@@ -127,7 +132,12 @@ plotGene <- function(gene, sampleTable=NA,
   txsdff = txs2DExs$df[txs2DExs$df$geneID == gene,]
   txsf = txsdff$txName
   txs2exs_listf = txs2DExs$txs2exs_list[as.vector(txsf)]
+  
+  #tab = table(melt(txs2exs_listf))
+  #tab = tab[order(as.numeric(rownames(tab))), ]
+  #txs2exs = melt(tab)
   txs2exs = melt(table(melt(txs2exs_listf)))
+  
   colnames(txs2exs) = c("exs", "txs", "value")
   orderedTxs = sort(unique(txs2exs$txs))
   txs2exs$exs = factor(txs2exs$exs, levels = orderedExs)
@@ -136,6 +146,7 @@ plotGene <- function(gene, sampleTable=NA,
   
   ## Filter DExs
   DExsf = DExs[orderedExs, ]
+  DExsf$exID = factor(DExsf$exID, levels = orderedExs)
   
   ## Filter counts
   if(!is.na(SCs)) {
@@ -251,32 +262,37 @@ plotGene <- function(gene, sampleTable=NA,
   exs2segs_p = segs2exs %>%
     mutate(value=ifelse(value==0,NA,value)) %>%
     mutate(shortID=factor(paste0("S.",str_sub(segs, -4)), levels=paste0("S.",str_sub(orderedSegs, -4)))) %>%
-    ggplot(aes(x=shortID, y=as.character(exons))) + geom_tile(aes(fill = as.factor(value), width=0.8, height=0.8)) +
+    ggplot(aes(x=shortID, y=as.factor(exons))) + geom_tile(aes(fill = as.factor(value), width=0.8, height=0.8)) +
     scale_fill_manual(values=c("salmon", "red", "grey75")) +
     scale_y_discrete(expand = c(0, 0)) +
     #scale_x_discrete(expand = c(0, 0)) +
     theme_minimal()  +
     guides(fill=FALSE) +
-    theme(axis.text.x = element_text(colour = "white")
-          , axis.text.y = element_text()
+    theme(axis.text.x = element_blank()#text(colour = "black", size = 7)
+          , axis.text.y = element_text(size=axis_size.y)
           , axis.title.x = element_blank()
           , axis.title.y = element_blank()
           , panel.grid.major = element_line(size=1, colour = "grey90")
     ) + coord_flip()
+  
+  if(length(DESegs)>0) {
+    ids = which(orderedSegs %in% DESegs)
+    exs2segs_p = exs2segs_p + geom_vline(xintercept = ids, color="blue")
+  }
   
   ######################
   
   txs2exs_p = txs2exs %>%
     mutate(value=ifelse(value==0,NA,value)) %>%
     mutate(shortTxID=factor(paste0("T.",str_sub(txs, -4)), levels=paste0("T.",str_sub(orderedTxs, -4)))) %>%
-    ggplot(aes(x=shortTxID, y=as.character(exs))) + geom_tile(aes(fill = as.factor(value), width=0.8, height=0.8)) +
+    ggplot(aes(x=shortTxID, y=exs)) + geom_tile(aes(fill = as.factor(value), width=0.8, height=0.8)) +
     scale_fill_manual(values=c("darkgreen", "grey75")) +
     scale_y_discrete(expand = c(0, 0)) +
     #scale_x_discrete(xpand = c(0, 0)) +
     theme_minimal()  +
     guides(fill=FALSE) +
-    theme(axis.text.x = element_text(colour = "white")
-          , axis.text.y = element_text()
+    theme(axis.text.x = element_text(colour = "black",  size = axis_size.x)
+          , axis.text.y = element_text(size=axis_size.y)
           ,axis.title.x = element_blank()
           , axis.title.y = element_blank()
           , panel.grid.major = element_line(size=1, colour = "grey90")
@@ -342,28 +358,28 @@ plotGene <- function(gene, sampleTable=NA,
   
   
   exLen_p = DExsf %>%
-    mutate(loglen = log10(lens)) %>%
-    mutate(exID = as.character(exID)) %>%
+    mutate(loglen = log10(lens+1)) %>%
+    mutate(exID = exID) %>%
     ggplot(aes(x=exID, y=loglen)) + 
-    geom_bar(aes(x=exID, y=loglen), stat = "identity", fill = 'bisque') + 
+    geom_bar(stat = "identity", fill = 'bisque') + 
     geom_abline(intercept = -log10(L), slope = 0, linetype="dashed", colour="red", size = 1) +
-    geom_text(aes(x=exID, y=loglen, label=lens, hjust= -.5), position = position_dodge(width=1), angle = 90, colour="white", fontface="bold") +
-    scale_x_discrete(breaks = orderedExs, expand = c(0, 0), position="top") +
+    geom_text(aes(label=lens, hjust= -.5), position = position_dodge(width=1), angle = 90, size = 7, colour="white", fontface="bold") +
+    #scale_x_discrete(breaks = orderedExs, expand=c(0,0), position="top") +
     #scale_y_log10() +
     theme_minimal() +
     #coord_flip() +
-    scale_y_reverse( expand = c(0, 0)) +
+    scale_y_reverse(  labels=function(l){paste0("        ", l)}) +
     theme(axis.title.y = element_blank()
           , axis.title.x = element_blank()
-          , axis.text.x.top = element_blank()#text(angle = 90, vjust = .5)
-          , axis.text.y = element_blank()
+          , axis.text.y = element_text(size=axis_size.y)
+          #, axis.text.x.top = element_blank()#text(angle = 90, vjust = .5)
+          , axis.text.x = element_blank()#text(size=7)
           , panel.grid = element_blank()
     )
   
   ###################################
   ## Plots layout
   ###################################
-  
   
   if(!landscape) {
     
@@ -377,12 +393,6 @@ plotGene <- function(gene, sampleTable=NA,
     pg8 <- ggplot_gtable(ggplot_build(exLen_p))
     pg9 <- ggplot_gtable(ggplot_build(ggplot()))
     
-    lay <- rbind(c(1,1,1,2,2),
-                 c(3,3,3,4,4),
-                 c(3,3,3,4,4),
-                 c(3,3,3,4,4),
-                 c(5,5,5,NA,NA)
-                 )
   } else {
     
   }
@@ -413,13 +423,37 @@ plotGene <- function(gene, sampleTable=NA,
   pg8$heights[2:3] <- maxHeight
   pg9$heights[2:3] <- maxHeight
   
-  p = grid.arrange(pg2, pg3, 
-                   pg5, pg6, 
-                   pg8, layout_matrix = lay)
+  if(!is.na(txTPMs) | !is.na(SCs)) {
+    lay <- rbind(c(1,1,1,2,2),
+                 c(3,3,3,4,4),
+                 c(3,3,3,4,4),
+                 c(3,3,3,4,4),
+                 c(5,5,5,NA,NA)
+    )
+    
+    p = grid.arrange(pg2, pg3, 
+                     pg5, pg6, 
+                     pg8, layout_matrix = lay) 
+  } else {
+      
+    lay <- rbind(c(1),
+                 c(2),
+                 c(2),
+                 c(2),
+                 c(3)
+    )
+    
+    p = grid.arrange(pg2, 
+                     pg5, 
+                     pg8, layout_matrix = lay) 
+
+  }
   
+
   if(!is.na(export_filename)) {
     print(paste0("Exporting Output to ", export_filename))
-    ggsave(export_filename, plot = p, device=png(), width=20, height=15)
+    ggsave(export_filename, plot = p, device=png(), width=40, height=25)
+    dev.off()
   }
   #ggsave(plot = p, paste0(dir_prefix, gene, ".png"), width=20, height=10)
 }
