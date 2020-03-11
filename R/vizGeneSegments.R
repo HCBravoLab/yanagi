@@ -151,9 +151,23 @@ plotGene <- function(gene, sampleTable=NA,
   ## Filter counts
   if(!is.na(SCs)) {
     SCsf = SCs[match(orderedSegs, SCs$segID),]
+    if(is.na(sampleTable)) {
+      nsamples = dim(SCs)[2]-1
+      sampleTable = data.frame(
+        row.names = paste("SC", nsamples, sep=""),
+        condition = rep("control", nsamples)
+      )
+    }
   }
   if(!is.na(txTPMs)) {
     txTPMsf = txTPMs[match(orderedTxs, txTPMs$txID),]
+    if(is.na(sampleTable)) {
+      nsamples = dim(txTPMs)[2]-1
+      sampleTable = data.frame(
+          row.names = paste("SC", nsamples, sep=""),
+          condition = rep("control", nsamples)
+      )
+    }
   }
   
   ## Obtain segs2txs table
@@ -174,69 +188,7 @@ plotGene <- function(gene, sampleTable=NA,
   ## Plots
   #######################################
   
-  if(!is.na(SCs)) {
-    sc_p_df = melt(SCsf, variable.name = "sample", value.name = "count") %>%
-      mutate(condition = rep(sampleTable$condition, each=length(orderedSegs))) %>%
-      mutate(rpk=count*L/(segsf$length)) %>% #*segs2txsNum
-      #mutate(marks=markedSegs[segID]) %>%
-      mutate(logcount=log2(count+1)) %>%
-      mutate(shortID=factor(paste0("S.",str_sub(segID, -4)), levels=paste0("S.",str_sub(orderedSegs, -4))))
-    print(view_SC)
-    if(view_SC=='count') {
-      sc_p_df$sc_y=sc_p_df$logcount
-      print('count')
-    } else {
-      sc_p_df$sc_y=sc_p_df$rpk
-      print('rpk')
-    }
-    sc_p = sc_p_df %>%
-      mutate(DE=ifelse(segID %in% DESegs, "DE", "NDE")) %>%
-      ggplot(aes(x=shortID, y=sc_y, color=condition)) +
-      geom_point(position = position_dodge(width = 0.5), aes(shape=DE), size=2) +
-      scale_shape_manual(values=c(16, 1))+
-      #geom_text(aes(label=Var2),hjust=0, vjust=0, size=3, position = position_dodge(width=0.5)) +
-      theme_minimal() +
-      #scale_y_log10() +
-      theme(axis.text.x = element_text()
-            , axis.text.y = element_blank()
-            , axis.title.x = element_blank()
-            , axis.title.y = element_blank(),#element_text(angle = 90),
-            legend.position="right", legend.title = element_blank()
-            #, panel.grid.major.x = element_line(size=1, colour = "grey75")
-      ) + coord_flip()
-  } else {
-    sc_p = ggplot()
-  }
-  
-  ############################
-  
-  if(!is.na(txTPMs)) {
-    txtpm_p = melt(txTPMsf, variable.name = "sample", value.name = "tpm") %>%
-      mutate(condition = rep(sampleTable$condition, each=length(orderedTxs))) %>%
-      mutate(logTPM=log2(tpm+1)) %>%
-      mutate(DE=ifelse(txID %in% DET_true, "DE", "NDE")) %>%
-      mutate(shortID=factor(paste0("T.",str_sub(txID, -4)), levels=paste0("T.",str_sub(orderedTxs, -4)))) %>%
-      ggplot(aes(x=shortID, y=logTPM, color=condition)) +
-      geom_point(position = position_dodge(width=0.5), aes(shape=DE), size=2)+#, size=2) +
-      scale_shape_manual(values=c(16, 1))+
-      #geom_text(aes(label=sampleID),hjust=0, vjust=0, size=3, position = position_dodge(width=0.5)) +
-      #scale_x_discrete(breaks = paste0("T.",str_sub(orderedTxs, -4)), expand = c(0, 0)) +
-      theme_minimal() +
-      #scale_y_log10() +
-      theme(axis.text.x = element_text()
-            , axis.text.y = element_blank()
-            , axis.title.x = element_blank()
-            , axis.title.y = element_blank(),#element_text(angle = 90),
-            legend.position="right", legend.title = element_blank()
-            #, panel.grid.major.x = element_line(size=1, colour = "grey75")
-      ) + coord_flip()
-  } else {
-    txtpm_p = ggplot()
-  }
-  
-  
-  
-  ############################
+
   
   ####
   for(segID in names(segs2exs_listf)) { # iterate over the list of segments to be viewed
@@ -306,17 +258,20 @@ plotGene <- function(gene, sampleTable=NA,
     ggplot(aes(x=segID, y=loglen)) + 
     geom_bar(aes(x=segID, y=loglen), stat = "identity", fill = 'bisque') + 
     geom_abline(intercept = -log10(L), slope = 0, linetype="dashed", colour="red", size = 1) +
-    geom_text(aes(x=segID, y=loglen, label=length, hjust= -0.5), position = position_dodge(width=1), colour="white", fontface="bold") +
-    scale_x_discrete(breaks = orderedSegs, expand = c(0, 0)) +
+    geom_text(aes(x=segID, y=loglen, label=length, hjust= 1.5), position = position_dodge(width=1), size = 7, colour="white", fontface="bold") +
+    scale_x_discrete(expand = c(0, 0)) +
+    #scale_x_discrete(breaks = orderedSegs, expand = c(0, 0)) +
     #scale_y_log10() +
     theme_minimal() +
-    scale_y_reverse( expand = c(0, 0)) +
+    #scale_y_reverse( expand = c(0, 0)) +
     theme(axis.title.x = element_blank()
           , axis.title.y = element_blank()
           , axis.text.x = element_blank()
           , axis.text.y = element_blank()
+          , panel.grid = element_blank()
     ) + coord_flip()
-  
+
+  ######################  
   
   txs2segs_p = segs2txs %>%
     mutate(shortTxID=factor(paste0("T.",str_sub(txs, -4)), levels=paste0("T.",str_sub(orderedTxs, -4)))) %>%
@@ -342,20 +297,19 @@ plotGene <- function(gene, sampleTable=NA,
     ggplot(aes(x=rownames(txslens), y=loglen)) + 
     geom_bar(aes(x=rownames(txslens), y=loglen), stat = "identity", fill = 'bisque') + 
     geom_abline(intercept = -log10(L), slope = 0, linetype="dashed", colour="red", size = 1) +
-    geom_text(aes(x=rownames(txslens), y=loglen, label=len, hjust= -0.5), position = position_dodge(width=1), angle = 90, colour="white", fontface="bold") +
-    scale_x_discrete(breaks = orderedTxs, expand = c(0, 0)) +
+    geom_text(aes(x=rownames(txslens), y=loglen, label=len, hjust= 1.5), position = position_dodge(width=1), size = 7, colour="white", fontface="bold") +
+    scale_x_discrete(expand = c(0, 0)) +
     #scale_y_log10() +
     theme_minimal() +
-    scale_y_reverse( expand = c(0, 0)) +
+    #scale_y_reverse( expand = c(0, 0)) +
     theme(axis.title.x = element_blank()
           , axis.title.y = element_blank()
-          , axis.text.x = element_blank()
+          , axis.text.x = element_text(size=axis_size.x)
           , axis.text.y = element_blank()
-    )
+          , panel.grid = element_blank()
+    ) + coord_flip()
   
   #########################
-  
-  
   
   exLen_p = DExsf %>%
     mutate(loglen = log10(lens+1)) %>%
@@ -376,6 +330,83 @@ plotGene <- function(gene, sampleTable=NA,
           , axis.text.x = element_blank()#text(size=7)
           , panel.grid = element_blank()
     )
+  
+  ############################
+  
+  if(!is.na(SCs)) {
+    sc_p_df = melt(SCsf, variable.name = "sample", value.name = "count") %>%
+      mutate(condition = rep(sampleTable$condition, each=length(orderedSegs))) %>%
+      mutate(rpk=count*L/(segsf$length)) %>% #*segs2txsNum
+      #mutate(marks=markedSegs[segID]) %>%
+      mutate(logcount=log2(count+1)) %>%
+      mutate(shortID=factor(paste0("S.",str_sub(segID, -4)), levels=paste0("S.",str_sub(orderedSegs, -4))))
+    print(view_SC)
+    if(view_SC=='count') {
+      sc_p_df$sc_y=sc_p_df$logcount
+      print('count')
+    } else {
+      sc_p_df$sc_y=sc_p_df$rpk
+      print('rpk')
+    }
+    sc_p = sc_p_df %>%
+      mutate(DE=ifelse(segID %in% DESegs, "DE", "NDE")) %>%
+      ggplot(aes(x=shortID, y=sc_y, color=condition)) +
+      geom_point(position = position_dodge(width = 0.5), aes(shape=DE), size=2) +
+      scale_shape_manual(values=c(16, 1))+
+      #geom_text(aes(label=Var2),hjust=0, vjust=0, size=3, position = position_dodge(width=0.5)) +
+      theme_minimal() +
+      #scale_y_log10() +
+      theme(axis.text.x = element_text(size=axis_size.x)
+            , axis.text.y = element_blank()
+            , axis.title.x = element_blank()
+            , axis.title.y = element_blank(),#element_text(angle = 90),
+            legend.position="right", legend.title = element_blank()
+            #, panel.grid.major.x = element_line(size=1, colour = "grey75")
+      ) + coord_flip()
+    if(levels(sc_p_df$condition) == 1 & levels(sc_p_df$DE) == 1) {
+      sc_p = sc_p + theme(legend.position = "none")
+    }
+  } else if(!is.na(txTPMs)) {
+    sc_p = segLen_p
+  } else {
+    sc_p = ggplot()
+  }
+  
+  ############################
+  
+  if(!is.na(txTPMs)) {
+    txtpm_p_df = melt(txTPMsf, variable.name = "sample", value.name = "tpm") %>%
+      mutate(condition = rep(sampleTable$condition, each=length(orderedTxs))) %>%
+      mutate(logTPM=log2(tpm+1)) %>%
+      mutate(DE=ifelse(txID %in% DET_true, "DE", "NDE")) %>%
+      mutate(shortID=factor(paste0("T.",str_sub(txID, -4)), levels=paste0("T.",str_sub(orderedTxs, -4))))
+    
+    txtpm_p = txtpm_p_df %>%
+      ggplot(aes(x=shortID, y=logTPM, color=condition)) +
+      geom_point(position = position_dodge(width=0.5), aes(shape=DE), size=2)+#, size=2) +
+      scale_shape_manual(values=c(16, 1))+
+      #geom_text(aes(label=sampleID),hjust=0, vjust=0, size=3, position = position_dodge(width=0.5)) +
+      #scale_x_discrete(breaks = paste0("T.",str_sub(orderedTxs, -4)), expand = c(0, 0)) +
+      theme_minimal() +
+      #scale_y_log10() +
+      theme(axis.text.x = element_text(size=axis_size.x)
+            , axis.text.y = element_blank()
+            , axis.title.x = element_blank()
+            , axis.title.y = element_blank(),#element_text(angle = 90),
+            legend.position="right", legend.title = element_blank()
+            #, panel.grid.major.x = element_line(size=1, colour = "grey75")
+      ) + coord_flip()
+    if(length(levels(txtpm_p_df$condition)) == 1 & length(unique(txtpm_p_df$DE)) == 1) {
+      txtpm_p = txtpm_p + theme(legend.position = "none")
+    }
+  } else if(!is.na(SCs)) {
+    txtpm_p = txLen_p
+  } else {
+    txtpm_p = ggplot()
+  }
+
+  
+  ############################
   
   ###################################
   ## Plots layout
@@ -424,11 +455,11 @@ plotGene <- function(gene, sampleTable=NA,
   pg9$heights[2:3] <- maxHeight
   
   if(!is.na(txTPMs) | !is.na(SCs)) {
-    lay <- rbind(c(1,1,1,2,2),
-                 c(3,3,3,4,4),
-                 c(3,3,3,4,4),
-                 c(3,3,3,4,4),
-                 c(5,5,5,NA,NA)
+    lay <- rbind(c(1,1,1,2),
+                 c(3,3,3,4),
+                 c(3,3,3,4),
+                 c(3,3,3,4),
+                 c(5,5,5,NA)
     )
     
     p = grid.arrange(pg2, pg3, 
@@ -457,7 +488,6 @@ plotGene <- function(gene, sampleTable=NA,
   }
   #ggsave(plot = p, paste0(dir_prefix, gene, ".png"), width=20, height=10)
 }
-
 
 
 ################################
