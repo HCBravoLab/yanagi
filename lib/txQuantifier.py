@@ -425,13 +425,12 @@ def quantifyTxSample(genesClusters, geneClustDict, segCounts, segCountsClusters,
         
     return(resDict, tot, TPM_denom)
 
-    
-L = 100
 LEN_R = 100
 LEN_FR = 250
-def quantifyTxExperiment(workDir, samplesFnames, outDir, segsMetaFname, L_eff, discover=False):
-    global LEN_FR
-    LEN_FR = L_eff
+def quantifyTxExperiment(workDir, samplesFnames, outDir, segsMetaFname,
+                         L_fr, L_read, discover=False):
+    global LEN_FR, LEN_R
+    LEN_FR, LEN_R = L_fr, L_read
     print("Load Segments Library")
     segs_dict, segIDs, segsByGenes = load_SegmentsLib(segsMetaFname)
     DExons = load_disjointExons(workDir)

@@ -326,7 +326,7 @@ This command estimates transcripts abundances in samples based on their segment 
 
 To estimate abundance levels one has to run the following command in the following format:
 ```
-python yanagi.py quant  -wd <work-directory> -s <segments-meta> -i <segment-counts-directory> -o <output-directory> -l <average-fragment-length>
+python yanagi.py quant  -wd <work-directory> -s <segments-meta> -i <segment-counts-directory> -o <output-directory> -lf <average-fragment-length> -lr <average-read-length>
 ```
 List of options available:
 
@@ -337,7 +337,9 @@ List of options available:
 
 - **-o** | **--out-dir**: The output directory.
 
-- **-l**  | **--len-fr**: Average Fragment Length in your RNAseq experiment.
+- **-lf**  | **--len-fr**: Average Fragment Length in your RNAseq experiment.
+
+- **-lr**  | **--len-read**: Average Read Length (default: 100).
 
 ### **Output files** ###
 
