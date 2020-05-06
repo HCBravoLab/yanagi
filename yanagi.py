@@ -4,6 +4,7 @@ import annotationPreprocessor as preprocessAnn
 import segmentsGenerator as generateSegments
 import segmentsAligner as alignSegments
 import psiCalculator as calculatePSI
+import txQuant as quantTxs
 
 import logging
 import argparse 
@@ -42,6 +43,12 @@ psiCalculatorSubparser = subparsers.add_parser(
     help="Calculates PSI values for a set of splicing events in samples from its underlying segment counts.")
 psiCalculatorSubparser.set_defaults(which="psiCalc")
 
+# TxQuantification Parser
+txQuantSubparser = subparsers.add_parser(
+    "quant", parents=[quantTxs.parser],
+    help="Estimates transcripts abundances in samples from its underlying segment counts.")
+txQuantSubparser.set_defaults(which="quant")
+
 # Setting logging preferences
 logger = logging.getLogger(__name__)
 # Add handler
@@ -63,6 +70,9 @@ def main():
         elif args.which == "psiCalc":
             calculatePSI.parser = parser  # Setting the module aparser
             calculatePSI.main()
+        elif args.which == "quant":
+            quantTxs.parser = parser  # Setting the module aparser
+            quantTxs.main()
             
     except Exception:
         #logger.error("Unknown error: {}".format(sys.exc_info()))

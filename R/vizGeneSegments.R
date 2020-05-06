@@ -151,6 +151,8 @@ plotGene <- function(gene, sampleTable=NA,
   ## Filter counts
   if(!is.na(SCs)) {
     SCsf = SCs[match(orderedSegs, SCs$segID),]
+    SCsf$segID = orderedSegs
+    SCsf[is.na(SCsf)] = 0
     if(is.na(sampleTable)) {
       nsamples = dim(SCs)[2]-1
       sampleTable = data.frame(
@@ -336,6 +338,7 @@ plotGene <- function(gene, sampleTable=NA,
   if(!is.na(SCs)) {
     sc_p_df = melt(SCsf, variable.name = "sample", value.name = "count") %>%
       mutate(condition = rep(sampleTable$condition, each=length(orderedSegs))) %>%
+      mutate(DE=ifelse(segID %in% DESegs, "DE", "NDE")) %>%
       mutate(rpk=count*L/(segsf$length)) %>% #*segs2txsNum
       #mutate(marks=markedSegs[segID]) %>%
       mutate(logcount=log2(count+1)) %>%
@@ -349,9 +352,9 @@ plotGene <- function(gene, sampleTable=NA,
       print('rpk')
     }
     sc_p = sc_p_df %>%
-      mutate(DE=ifelse(segID %in% DESegs, "DE", "NDE")) %>%
+      
       ggplot(aes(x=shortID, y=sc_y, color=condition)) +
-      geom_point(position = position_dodge(width = 0.5), aes(shape=DE), size=2) +
+      geom_point(position = position_dodge(width = 0.5), aes(shape=DE), size=5) +
       scale_shape_manual(values=c(16, 1))+
       #geom_text(aes(label=Var2),hjust=0, vjust=0, size=3, position = position_dodge(width=0.5)) +
       theme_minimal() +
@@ -363,9 +366,9 @@ plotGene <- function(gene, sampleTable=NA,
             legend.position="right", legend.title = element_blank()
             #, panel.grid.major.x = element_line(size=1, colour = "grey75")
       ) + coord_flip()
-    if(levels(sc_p_df$condition) == 1 & levels(sc_p_df$DE) == 1) {
-      sc_p = sc_p + theme(legend.position = "none")
-    }
+#    if(levels(sc_p_df$condition) == 1 & levels(sc_p_df$DE) == 1) {
+#      sc_p = sc_p + theme(legend.position = "none")
+#    }
   } else if(!is.na(txTPMs)) {
     sc_p = segLen_p
   } else {
@@ -396,9 +399,9 @@ plotGene <- function(gene, sampleTable=NA,
             legend.position="right", legend.title = element_blank()
             #, panel.grid.major.x = element_line(size=1, colour = "grey75")
       ) + coord_flip()
-    if(length(levels(txtpm_p_df$condition)) == 1 & length(unique(txtpm_p_df$DE)) == 1) {
-      txtpm_p = txtpm_p + theme(legend.position = "none")
-    }
+#    if(length(levels(txtpm_p_df$condition)) == 1 & length(unique(txtpm_p_df$DE)) == 1) {
+#      txtpm_p = txtpm_p + theme(legend.position = "none")
+#    }
   } else if(!is.na(SCs)) {
     txtpm_p = txLen_p
   } else {

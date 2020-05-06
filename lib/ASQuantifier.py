@@ -24,7 +24,7 @@ def loadSegCounts(inFile, segsDict):
             else:
                 seg1ID, seg2ID, count = tokens[:3]
                 #txs = tokens[-1]
-                txs = segsDict[seg1ID].txs & segsDict[seg2ID].txs
+                txs = set(segsDict[seg1ID].txs) & set(segsDict[seg2ID].txs)
                 txs = set2Str(txs)
                 #txs = segTxs[seg1ID] & segTxs[seg2ID]
                 if seg1ID == seg2ID:

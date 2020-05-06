@@ -5,7 +5,7 @@ from collections import defaultdict
 class Seg:
     ID = ""
     header = ""
-    txs = set()
+    txs = []
 
     chrom = ""
     length = 0
@@ -14,6 +14,8 @@ class Seg:
     endLoc = 0
     exs = []
     strand = "+"
+
+    posInTx = []
 
     def __init__(self, header):
         self.header = header
@@ -28,8 +30,10 @@ class Seg:
         self.strand = strand
         self.length = int(length)
         
-        self.txs = set(txIDs.split(","))
+        self.txs = txIDs.split(",")
         self.exs = [int(ex) for ex in binIDs.split(",")]
+
+        self.posInTx = [int(p) for p in tokens[9].split(",")]
 
     def __str__(self):
         return "%s:%d" % (self.ID, self.length)
