@@ -314,6 +314,45 @@ ENSG00000214063;SE:11:842915-847201:847300-850288:+	0.6484149855907781	0.4393939
 ...
 ```
 
+----------------------------------------------
+**Segment-based Transcriptome Quantification**
+==============================================
+----------------------------------------------
+
+After samples are aligned to the segments using command ```align```, one can process the segments/segment-pairs counts obtained to perform transcript level analysis. Yanagi provides a command to estimate transcript abundances based on segments counts in each of the aligned samples.
+This command estimates transcripts abundances in samples based on their segment mappings by running EM procedure. It produces abundances measured in estimated counts and TPMs for each transcript.
+
+### **Command and options** ###
+
+To estimate abundance levels one has to run the following command in the following format:
+```
+python yanagi.py quant  -wd <work-directory> -s <segments-meta> -i <segment-counts-directory> -o <output-directory> -l <average-fragment-length>
+```
+List of options available:
+
+- **-wd** | **--work-dir**: This is the work directory where the preprocessed annotation files exist (same output directory used in the preprocess subcommand). This directory must have two files ```disjoint_bins.tsv``` and ```txs2bins.tsv```.
+- **-s** | **--segs-meta**: This is the segments metadata file ```.fa.meta``` obtained from yanagi command ```segment```. Refer to section <a href="#-segment">`Segments Generation section`</a> for how to run ```segment``` command.
+
+- **-i** | **---segCounts-dir**: The path to a directory with segments counts (or segment-pairs counts) obtained from yanagi command ```align```. The directory will have a .tsv file per sample.
+
+- **-o** | **--out-dir**: The output directory.
+
+- **-l**  | **--len-fr**: Average Fragment Length in your RNAseq experiment.
+
+### **Output files** ###
+
+The abundance estimation operation outputs a .tsv file per sample. Each .tsv file is of the following format:
+
+```
+target_id	length	eff_length	est_counts	tpm
+ENST00000457540	1044	795.0	38.20605	0.99842
+ENST00000414273	1543	1294.0	273.95033	4.39831
+ENST00000414487	942	693.0	1026.34816	30.76872
+ENST00000413296	527	278.0	0.00000	0.00000
+ENST00000367208	355	106.0	79.17673	15.51814
+...
+```
+
 <a id="-segsDownloads"/>
 
 ---------------------------------------
