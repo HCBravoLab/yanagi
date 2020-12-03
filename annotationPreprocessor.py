@@ -15,7 +15,7 @@ parser = ArgumentParser(description=description, formatter_class=RawTextHelpForm
                         add_help=False)
 parser.add_argument("-gtf", "--annotation-file", help="specify transcriptome annotation GTF file",
                     required=True)
-parser.add_argument("-fa", "--sequence-file", help="specify transcriptome sequences FASTA file",
+parser.add_argument("-fa", "--sequence-file", help="specify the genome sequence (e.g. chromosomes) FASTA file",
                     required=True)
 parser.add_argument("-o", "--output-dir", help="specify output path", required=True)
 
