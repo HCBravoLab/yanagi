@@ -58,7 +58,7 @@ where the subcommand can be one of these options:
 ----------------------------
 
 Exons (and retained introns) in the transcriptome annotation can be overlapping within a gene (e.g. in 3'/5' splicing) or across genes. In order for Yanagi to guaranteeing L-disjointness property of the generated segments, a preprocessing step is needed to generate disjoint exonic bins.
-Yanagi generate disjoint exonic bins and their transcripts mappings from an input annotation file (GTF format) and the genome sequence file (FASTA format).
+Yanagi generate disjoint exonic bins and their transcripts mappings from an input annotation file (GTF format) and the genome sequence file (FASTA format). (Note that the .fa file should contain the genome sequence file not the transcripts sequences.)
 
 ### **Command and options** ###
 
